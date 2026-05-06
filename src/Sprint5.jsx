@@ -2447,6 +2447,10 @@ const NAV_PREV = [
 // ── APP ───────────────────────────────────────────────────────────────────────
 export default function Sprint5() {
   const [page, setPage] = useState("dashboard");
+  const [navOpen, setNavOpen] = useState(false);
+
+  // Close drawer when user picks a page (mobile only — has no effect on desktop)
+  const goto = (id) => { setPage(id); setNavOpen(false); };
 
   return (
     <div style={{ minHeight:"100vh", display:"flex", fontFamily:"'Outfit','Plus Jakarta Sans',sans-serif", background:C.chalk }}>
@@ -2459,8 +2463,11 @@ export default function Sprint5() {
         select, input { font-family:'Outfit',sans-serif; }
       `}</style>
 
+      {/* Mobile-only scrim */}
+      <div className={`grow-scrim ${navOpen?"is-open":""}`} onClick={()=>setNavOpen(false)} />
+
       {/* ── SIDEBAR ── */}
-      <aside style={{ width:252, flexShrink:0, display:"flex", flexDirection:"column", background:C.grove, borderRight:"1px solid rgba(255,255,255,0.06)" }}>
+      <aside className={`grow-sidebar ${navOpen?"is-open":""}`} style={{ width:252, flexShrink:0, display:"flex", flexDirection:"column", background:C.grove, borderRight:"1px solid rgba(255,255,255,0.06)" }}>
 
         {/* Brand lockup */}
         <div style={{ padding:"20px 18px 16px", borderBottom:"1px solid rgba(255,255,255,0.08)" }}>
@@ -2484,7 +2491,7 @@ export default function Sprint5() {
           {NAV_OPS.map(n => {
             const active = page === n.id;
             return (
-              <button key={n.id} onClick={() => setPage(n.id)} style={{
+              <button key={n.id} onClick={() => goto(n.id)} style={{
                 width:"100%", display:"flex", alignItems:"center", gap:10,
                 padding:"9px 10px", borderRadius:10, marginBottom:2, cursor:"pointer",
                 background: active ? "rgba(157,217,106,0.12)" : "transparent",
@@ -2506,7 +2513,7 @@ export default function Sprint5() {
           {NAV.map(n => {
             const active = page === n.id;
             return (
-              <button key={n.id} onClick={() => setPage(n.id)} style={{
+              <button key={n.id} onClick={() => goto(n.id)} style={{
                 width:"100%", display:"flex", alignItems:"center", gap:10,
                 padding:"9px 10px", borderRadius:10, marginBottom:2, cursor:"pointer",
                 background: active ? "rgba(157,217,106,0.12)" : "transparent",
@@ -2531,7 +2538,7 @@ export default function Sprint5() {
             {NAV_PREV.map(n => {
               const active = page === n.id;
               return (
-                <button key={n.id} onClick={() => setPage(n.id)} style={{
+                <button key={n.id} onClick={() => { setPage(n.id); setNavOpen(false); }} style={{
                   width:"100%", display:"flex", alignItems:"center", gap:9, padding:"7px 10px",
                   borderRadius:9, marginBottom:1, cursor:"pointer",
                   background: active ? "rgba(157,217,106,0.12)" : "transparent",
@@ -2578,6 +2585,14 @@ export default function Sprint5() {
 
           {/* Breadcrumb */}
           <div style={{ display:"flex", alignItems:"center", gap:8, fontSize:13 }}>
+            {/* Hamburger — mobile only */}
+            <button onClick={()=>setNavOpen(true)} aria-label="Open navigation"
+              className="grow-hamburger"
+              style={{ width:36, height:36, borderRadius:8, background:C.mist,
+                border:`1px solid ${C.border}`, alignItems:"center", justifyContent:"center",
+                cursor:"pointer", color:C.ink, fontSize:18, marginRight:4 }}>
+              ☰
+            </button>
             <div style={{ display:"flex", alignItems:"center", gap:6 }}>
               <XGrowMark size={22} rx={6}/>
               <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:15, letterSpacing:-0.3, color:C.grove }}>
@@ -2590,15 +2605,15 @@ export default function Sprint5() {
 
           {/* Right — tagline pill + badge + avatar */}
           <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-            {/* Brand tagline */}
-            <div style={{ display:"flex", alignItems:"center", gap:6, padding:"4px 12px 4px 8px",
+            {/* Brand tagline — hidden on mobile */}
+            <div className="grow-header-tagline" style={{ display:"flex", alignItems:"center", gap:6, padding:"4px 12px 4px 8px",
               borderRadius:20, background:C.grove, border:`1px solid ${C.field}` }}>
               <XGrowMark size={16} bg="none" stroke={C.lime} tip={C.lime}/>
               <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:12,
                 color:C.lime, letterSpacing:0.4 }}>Grow. Further.</span>
             </div>
-            {/* Section badge — shows current group */}
-            <div style={{ fontSize:11, padding:"4px 10px", borderRadius:20,
+            {/* Section badge — hidden on mobile */}
+            <div className="grow-header-sprint-badge" style={{ fontSize:11, padding:"4px 10px", borderRadius:20,
               background:`${C.shoot}15`, color:C.shoot, fontWeight:600 }}>
               {NAV_OPS.some(n=>n.id===page) ? "Operations"
                 : NAV.some(n=>n.id===page) ? "Route to Market · Sprint 5"
@@ -2613,7 +2628,7 @@ export default function Sprint5() {
         </header>
 
         {/* Page content */}
-        <main style={{ flex:1, overflowY:"auto", padding:"24px" }}>
+        <main className="grow-main" style={{ flex:1, overflowY:"auto", padding:"24px" }}>
           <div style={{ maxWidth:1400, margin:"0 auto" }}>
             {page==="dashboard"    && <Dashboard />}
             {page==="training"     && <TrainingHub />}
