@@ -90,7 +90,7 @@ const TOP_COUNTIES = [
   { name:"Kisumu",   farmers:38,  value:760000,  crops:["Sugarcane","Rice","Fishing"] },
 ];
 
-function Dashboard() {
+export function Dashboard() {
   const totalRevenue = DASH_REVENUE.reduce((s,r)=>s+r.local+r.export,0);
   const combinedData = DASH_REVENUE.map(r=>({ ...r, total:r.local+r.export }));
 
@@ -255,7 +255,7 @@ const GUIDES = [
 const CATEGORY_COLORS = { "Export":C.sky, "Crop Guide":C.field, "Finance":C.harvest, "AgriTech":C.teal, "Business":C.violet };
 const LEVEL_COLORS    = { "Beginner":C.shoot, "Intermediate":C.amber, "Advanced":C.crimson };
 
-function TrainingHub() {
+export function TrainingHub() {
   const [view, setView]     = useState("courses");
   const [selected, setSelected] = useState(null);
   const [catFilter, setCatFilter] = useState("All");
@@ -473,7 +473,7 @@ const TRACE_RECORDS = [
   },
 ];
 
-function Traceability() {
+export function Traceability() {
   const [selected, setSelected] = useState(TRACE_RECORDS[0]);
   const [scanMode, setScanMode] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -669,7 +669,7 @@ const ORG_PROFILE = {
   farmers:1240, counties:24, tenantSince:"2022-11", mrrKES:2400,
 };
 
-function Settings() {
+export function Settings() {
   const [tab, setTab]         = useState("profile");
   const [saved, setSaved]     = useState(false);
   const [apiVisible, setApiVisible] = useState(false);

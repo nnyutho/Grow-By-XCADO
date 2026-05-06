@@ -4,6 +4,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   RadarChart, Radar, PolarGrid, PolarAngleAxis, Cell, PieChart, Pie
 } from "recharts";
+import { Dashboard, TrainingHub, Traceability, Settings } from "./Sprint6.jsx";
 
 // ── GROW BY XCADO — BRAND TOKENS ──────────────────────────────────────────────
 const C = {
@@ -2417,6 +2418,14 @@ function FlutterMobileApp() {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // ── NAV ───────────────────────────────────────────────────────────────────────
+// Unified app: 4 Sprint 5 modules + 8 Platform modules + 4 Operations modules.
+const NAV_OPS = [
+  { id:"dashboard",    icon:"🏠", label:"Dashboard"           },
+  { id:"training",     icon:"📚", label:"Training & Knowledge" },
+  { id:"traceability", icon:"🔗", label:"Blockchain Trace"     },
+  { id:"settings",     icon:"⚙️", label:"Settings & Config"    },
+];
+
 const NAV = [
   { id:"marketplace",  icon:"🛒", label:"Marketplace",        tag:"New" },
   { id:"supplychain",  icon:"🚚", label:"Supply Chain",       tag:"New" },
@@ -2437,7 +2446,7 @@ const NAV_PREV = [
 
 // ── APP ───────────────────────────────────────────────────────────────────────
 export default function Sprint5() {
-  const [page, setPage] = useState("marketplace");
+  const [page, setPage] = useState("dashboard");
 
   return (
     <div style={{ minHeight:"100vh", display:"flex", fontFamily:"'Outfit','Plus Jakarta Sans',sans-serif", background:C.chalk }}>
@@ -2468,7 +2477,30 @@ export default function Sprint5() {
 
         {/* Nav items */}
         <div style={{ padding:"10px 10px", flex:1, overflowY:"auto" }}>
-          <p style={{ fontSize:9, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.1em", padding:"8px 10px 5px", color:"rgba(255,255,255,0.22)", fontFamily:"'Outfit',sans-serif" }}>
+          {/* Operations group — Dashboard / Training / Trace / Settings */}
+          <p style={{ fontSize:9, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.1em", padding:"8px 10px 5px", color:"rgba(255,255,255,0.32)", fontFamily:"'Outfit',sans-serif" }}>
+            Operations
+          </p>
+          {NAV_OPS.map(n => {
+            const active = page === n.id;
+            return (
+              <button key={n.id} onClick={() => setPage(n.id)} style={{
+                width:"100%", display:"flex", alignItems:"center", gap:10,
+                padding:"9px 10px", borderRadius:10, marginBottom:2, cursor:"pointer",
+                background: active ? "rgba(157,217,106,0.12)" : "transparent",
+                border: active ? `1px solid rgba(157,217,106,0.22)` : "1px solid transparent",
+                borderLeft: active ? `3px solid ${C.lime}` : "3px solid transparent",
+                color: active ? "#F5F1E8" : "rgba(245,241,232,0.55)",
+                fontSize:13, fontWeight: active ? 600 : 500, textAlign:"left",
+                transition:"all 0.14s",
+              }}>
+                <span style={{ fontSize:15 }}>{n.icon}</span>
+                <span style={{ flex:1 }}>{n.label}</span>
+              </button>
+            );
+          })}
+
+          <p style={{ fontSize:9, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.1em", padding:"14px 10px 5px", color:"rgba(255,255,255,0.22)", fontFamily:"'Outfit',sans-serif", borderTop:"1px solid rgba(255,255,255,0.07)", marginTop:6 }}>
             Route to Market · Sprint 5
           </p>
           {NAV.map(n => {
@@ -2553,7 +2585,7 @@ export default function Sprint5() {
               </span>
             </div>
             <span style={{ color:C.border, fontSize:16 }}>/</span>
-            <span style={{ fontWeight:700, color:C.ink, fontSize:13 }}>{[...NAV, ...NAV_PREV].find(n=>n.id===page)?.label}</span>
+            <span style={{ fontWeight:700, color:C.ink, fontSize:13 }}>{[...NAV_OPS, ...NAV, ...NAV_PREV].find(n=>n.id===page)?.label}</span>
           </div>
 
           {/* Right — tagline pill + badge + avatar */}
@@ -2565,10 +2597,12 @@ export default function Sprint5() {
               <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:12,
                 color:C.lime, letterSpacing:0.4 }}>Grow. Further.</span>
             </div>
-            {/* Sprint badge */}
+            {/* Section badge — shows current group */}
             <div style={{ fontSize:11, padding:"4px 10px", borderRadius:20,
               background:`${C.shoot}15`, color:C.shoot, fontWeight:600 }}>
-              Route to Market · Sprint 5
+              {NAV_OPS.some(n=>n.id===page) ? "Operations"
+                : NAV.some(n=>n.id===page) ? "Route to Market · Sprint 5"
+                : "Platform Modules"}
             </div>
             {/* Avatar */}
             <div style={{ width:32, height:32, borderRadius:"50%", background:C.field,
@@ -2581,18 +2615,22 @@ export default function Sprint5() {
         {/* Page content */}
         <main style={{ flex:1, overflowY:"auto", padding:"24px" }}>
           <div style={{ maxWidth:1400, margin:"0 auto" }}>
-            {page==="marketplace" && <Marketplace />}
-            {page==="supplychain" && <SupplyChain />}
-            {page==="compliance"  && <ComplianceCerts />}
-            {page==="ai"          && <AIIntelligence />}
-            {page==="farmers"     && <FarmerRegistry />}
-            {page==="trade"       && <TradeAssessment />}
-            {page==="saas"        && <SaaSSubscriptions />}
-            {page==="weather"     && <WeatherFields />}
-            {page==="supplier"    && <SupplierRBAC />}
-            {page==="analytics"   && <AnalyticsSDG />}
-            {page==="comms"       && <CommunicationsHub />}
-            {page==="mobile"      && <FlutterMobileApp />}
+            {page==="dashboard"    && <Dashboard />}
+            {page==="training"     && <TrainingHub />}
+            {page==="traceability" && <Traceability />}
+            {page==="settings"     && <Settings />}
+            {page==="marketplace"  && <Marketplace />}
+            {page==="supplychain"  && <SupplyChain />}
+            {page==="compliance"   && <ComplianceCerts />}
+            {page==="ai"           && <AIIntelligence />}
+            {page==="farmers"      && <FarmerRegistry />}
+            {page==="trade"        && <TradeAssessment />}
+            {page==="saas"         && <SaaSSubscriptions />}
+            {page==="weather"      && <WeatherFields />}
+            {page==="supplier"     && <SupplierRBAC />}
+            {page==="analytics"    && <AnalyticsSDG />}
+            {page==="comms"        && <CommunicationsHub />}
+            {page==="mobile"       && <FlutterMobileApp />}
           </div>
         </main>
       </div>
