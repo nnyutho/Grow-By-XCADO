@@ -1,0 +1,119 @@
+# Codemagic configuration for the grow-mobile Flutter app.
+# https://docs.codemagic.io/yaml/yaml-getting-started/
+#
+# Workflows defined here appear automatically in the Codemagic UI after
+# the next push to main. Trigger via the dashboard or via webhook.
+
+workflows:
+  android-release:
+    name: Grow Mobile · Android Release
+    max_build_duration: 60
+    instance_type: linux_x2
+    environment:
+      flutter: stable
+      java: 17
+      groups:
+        # Add a 'signing' group later with these vars to sign the AAB:
+        #   CM_KEYSTORE (file)
+        #   CM_KEYSTORE_PASSWORD
+        #   CM_KEY_ALIAS
+        #   CM_KEY_PASSWORD
+        # — for now we ship UNSIGNED so first build works without secrets.
+        # - signing
+      vars:
+        WORKING_DIR: grow-mobile
+
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: 'main'
+          include: true
+          source: true
+      cancel_previous_builds: true
+
+    scripts:
+      - name: Show environment
+        script: |
+          echo "Flutter:"
+          flutter --version
+          echo "Java:"
+          java -version
+          echo "Working directory: $WORKING_DIR"
+          ls -la $WORKING_DIR
+
+      - name: Flutter pub get
+        script: |
+          cd $WORKING_DIR
+          flutter pub get
+
+      - name: Flutter analyze (non-blocking)
+        ignore_failure: true
+        script: |
+          cd $WORKING_DIR
+          flutter analyze
+
+      - name: Build debug APK
+        script: |
+          cd $WORKING_DIR
+          flutter build apk --debug
+
+      - name: Build release APK (unsigned)
+        script: |
+          cd $WORKING_DIR
+          flutter build apk --release
+
+      - name: Build release App Bundle (unsigned)
+        script: |
+          cd $WORKING_DIR
+          flutter build appbundle --release
+
+      - name: Show artifact sizes
+        script: |
+          cd $WORKING_DIR
+          echo "=== Built artifacts ==="
+          ls -lh build/app/outputs/flutter-apk/ 2>/dev/null || true
+          ls -lh build/app/outputs/bundle/release/ 2>/dev/null || true
+
+    artifacts:
+      - grow-mobile/build/**/outputs/**/*.apk
+      - grow-mobile/build/**/outputs/**/*.aab
+      - grow-mobile/build/**/outputs/**/mapping.txt
+      - flutter_drive.log
+
+    publishing:
+      email:
+        recipients:
+          - nnyutho@gmail.com
+        notify:
+          success: true
+          failure: true
+
+  # Lightweight web preview build — sanity-checks the Vite/PWA flow too.
+  # Useful when you want to verify a PR doesn't break web before merging.
+  web-preview:
+    name: Grow Mobile · Web Preview
+    max_build_duration: 30
+    instance_type: linux_x2
+    environment:
+      flutter: stable
+      vars:
+        WORKING_DIR: grow-mobile
+
+    triggering:
+      events:
+        - pull_request
+      branch_patterns:
+        - pattern: '*'
+          include: true
+          source: true
+
+    scripts:
+      - name: Build web
+        script: |
+          cd $WORKING_DIR
+          flutter pub get
+          flutter build web --release
+
+    artifacts:
+      - grow-mobile/build/web/**
