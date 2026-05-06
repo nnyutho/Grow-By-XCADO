@@ -12,16 +12,12 @@ workflows:
     environment:
       flutter: stable
       java: 17
-      groups:
-        # Add a 'signing' group later with these vars to sign the AAB:
-        #   CM_KEYSTORE (file)
-        #   CM_KEYSTORE_PASSWORD
-        #   CM_KEY_ALIAS
-        #   CM_KEY_PASSWORD
-        # — for now we ship UNSIGNED so first build works without secrets.
-        # - signing
       vars:
         WORKING_DIR: grow-mobile
+      # When signing is set up, add this block back here:
+      #   groups:
+      #     - signing            # contains CM_KEYSTORE / CM_KEYSTORE_PASSWORD / CM_KEY_ALIAS / CM_KEY_PASSWORD
+      # For now we ship UNSIGNED so the first build works without secrets.
 
     triggering:
       events:
