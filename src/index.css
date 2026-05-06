@@ -36,15 +36,32 @@ body {
   .grow-main > div { max-width: 100% !important; }
   /* tighten desktop grids on mobile */
   .grow-main .grid-cols-3,
-  .grow-main .grid-cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .grow-main .grid-cols-4,
+  .grow-main .grid-cols-5,
+  .grow-main .grid-cols-6 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
   .grow-main .col-span-2 { grid-column: span 2 / span 2 !important; }
+  /* dashboard header — stack vertically so the status pill drops below */
+  .grow-main .flex.items-start.justify-between { flex-wrap: wrap; gap: 8px; }
+  .grow-main h2 { font-size: 22px !important; line-height: 1.15 !important; }
+  /* prevent KPI card content from being squashed by long labels */
+  .grow-main .grid > * { min-width: 0; }
 }
 
 @media (max-width: 480px) {
   .grow-main .grid-cols-2,
   .grow-main .grid-cols-3,
-  .grow-main .grid-cols-4 { grid-template-columns: minmax(0, 1fr) !important; }
-  .grow-main .col-span-2 { grid-column: span 1 / span 1 !important; }
+  .grow-main .grid-cols-4,
+  .grow-main .grid-cols-5,
+  .grow-main .grid-cols-6 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  /* tables get horizontal scroll instead of squishing */
+  .grow-main table { display: block; overflow-x: auto; white-space: nowrap; }
+  /* keep critical 1-col layouts intact (e.g., long single-column lists) */
+  .grow-main .col-span-2 { grid-column: span 2 / span 2 !important; }
+  /* shrink card padding so 2-col KPIs aren't cramped */
+  .grow-main .p-4 { padding: 12px !important; }
+  .grow-main .p-5 { padding: 14px !important; }
+  /* keep value text from breaking */
+  .grow-main .text-2xl { font-size: 18px !important; }
 }
 
 .grow-hamburger { display: none; }
