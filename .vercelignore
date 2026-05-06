@@ -7,3 +7,6 @@ dist
 Thumbs.db
 *.log
 .vercel
+
+# Native mobile app — built separately with Flutter, not by Vercel
+grow-mobile/

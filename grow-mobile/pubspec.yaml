@@ -1,0 +1,65 @@
+name: grow_mobile
+description: Grow by XCADO — Farmer-side mobile app. Marketplace, weather, M-Pesa payments, blockchain traceability, training.
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+  flutter: '>=3.22.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # Routing
+  go_router: ^14.2.0
+
+  # State
+  flutter_riverpod: ^2.5.1
+
+  # Networking
+  dio: ^5.5.0
+  json_annotation: ^4.9.0
+
+  # Local persistence + offline support
+  shared_preferences: ^2.3.0
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  connectivity_plus: ^6.0.3
+
+  # UI
+  google_fonts: ^6.2.1
+  intl: ^0.19.0
+  fl_chart: ^0.68.0
+  cached_network_image: ^3.4.0
+
+  # QR scanning for traceability
+  mobile_scanner: ^5.1.1
+
+  # Maps for plot GPS
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+
+  # Push notifications
+  firebase_core: ^3.3.0
+  firebase_messaging: ^15.0.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  build_runner: ^2.4.11
+  json_serializable: ^6.8.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+  fonts:
+    - family: BarlowCondensed
+      fonts:
+        - asset: assets/fonts/BarlowCondensed-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/BarlowCondensed-ExtraBold.ttf
+          weight: 800
