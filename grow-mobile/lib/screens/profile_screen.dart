@@ -36,7 +36,7 @@ class ProfileScreen extends ConsumerWidget {
         Center(child: Text(p.name, style: GoogleFonts.barlowCondensed(fontSize: 24, fontWeight: FontWeight.w800, color: XcadoColors.ink))),
         Center(child: Text(p.phone, style: const TextStyle(fontSize: 13, color: XcadoColors.slate))),
         const SizedBox(height: 8),
-        Center(child: GrowBadge(label: 'KYC ${p.kyc}', color: p.kyc == 'Verified' ? XcadoColors.shoot : XcadoColors.amber)),
+        Center(child: GrowBadge(label: 'KYC ${p.kyc}', color: p.kyc == 'Verified' ? XcadoColors.shoot : XcadoColors.harvest)),
         const SizedBox(height: 22),
         Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(children: [
           _row('🆔', 'Farmer ID', p.id),
@@ -51,7 +51,7 @@ class ProfileScreen extends ConsumerWidget {
           _divider(),
           _row('💳', 'M-Pesa', p.mpesaNo),
           _divider(),
-          _row('📊', 'Credit score', '${p.credit}/100', valueColor: p.credit >= 70 ? XcadoColors.shoot : XcadoColors.amber),
+          _row('📊', 'Credit score', '${p.credit}/100', valueColor: p.credit >= 70 ? XcadoColors.shoot : XcadoColors.harvest),
         ]))),
         const SizedBox(height: 16),
         Card(child: Column(children: [

@@ -2,10 +2,12 @@ include: package:flutter_lints/flutter.yaml
 
 linter:
   rules:
-    - prefer_const_constructors
-    - prefer_const_literals_to_create_immutables
-    - avoid_print
-    - require_trailing_commas
+    avoid_print: true
+    # Stylistic rules disabled — too noisy for the scaffold; re-enable
+    # after a `dart format .` pass when the codebase stabilises.
+    require_trailing_commas: false
+    prefer_const_constructors: false
+    prefer_const_literals_to_create_immutables: false
 
 analyzer:
   exclude:
