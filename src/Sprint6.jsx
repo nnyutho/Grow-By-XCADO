@@ -16,19 +16,22 @@ const C = {
 };
 
 // ── XCADO MARK ───────────────────────────────────────────────────────────────
-// Tile that wraps the official Xcado logo PNG. `bg="none"` renders the bare
-// logo (e.g. on light surfaces). Default renders a dark-green rounded tile.
-const XGrowMark = ({ size=36, bg="#0F3D20", stroke="#F5F1E8", tip="#9DD96A", rx=13 }) => (
+// Square tile that wraps the official Xcado logo PNG. White background by
+// default so the wide white-bg logo blends cleanly. `bg="none"` renders bare
+// (e.g. on light surfaces), `bg="#0F3D20"` renders the legacy dark tile.
+const XGrowMark = ({ size=36, bg="#FFFFFF", stroke="#E5DFD3", rx=10 }) => (
   <span style={{
     width:size, height:size, borderRadius:rx, flexShrink:0,
     background: bg === "none" ? "transparent" : bg,
     display:"inline-flex", alignItems:"center", justifyContent:"center",
-    border: bg === "none" ? "none" : `1px solid ${stroke}1A`,
+    border: bg === "none" ? "none" : `1px solid ${stroke}`,
+    boxShadow: bg === "none" ? "none" : "0 1px 2px rgba(12,26,14,0.06)",
+    overflow:"hidden",
   }}>
     <img
       src="/xcado-logo-mark.png"
       alt="Xcado"
-      style={{ width: size * 0.78, height: size * 0.78, objectFit:"contain", display:"block" }}
+      style={{ width: size * 0.86, height: size * 0.86, objectFit:"contain", display:"block" }}
     />
   </span>
 );

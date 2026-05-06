@@ -36,19 +36,22 @@ const C = {
 };
 
 // ── XCADO MARK ───────────────────────────────────────────────────────────────
-// Tile that wraps the official Xcado logo PNG. `bg="none"` renders the bare
-// logo (e.g. on light surfaces). Default renders a dark-green rounded tile.
-const XGrowMark = ({ size=36, bg="#0F3D20", stroke="#F5F1E8", tip="#9DD96A", rx=13 }) => (
+// Square tile that wraps the official Xcado logo PNG. White background by
+// default so the wide white-bg logo blends cleanly. `bg="none"` renders bare
+// (e.g. on light surfaces), `bg="#0F3D20"` renders the legacy dark tile.
+const XGrowMark = ({ size=36, bg="#FFFFFF", stroke="#E5DFD3", rx=10 }) => (
   <span style={{
     width:size, height:size, borderRadius:rx, flexShrink:0,
     background: bg === "none" ? "transparent" : bg,
     display:"inline-flex", alignItems:"center", justifyContent:"center",
-    border: bg === "none" ? "none" : `1px solid ${stroke}1A`,
+    border: bg === "none" ? "none" : `1px solid ${stroke}`,
+    boxShadow: bg === "none" ? "none" : "0 1px 2px rgba(12,26,14,0.06)",
+    overflow:"hidden",
   }}>
     <img
       src="/xcado-logo-mark.png"
       alt="Xcado"
-      style={{ width: size * 0.78, height: size * 0.78, objectFit:"contain", display:"block" }}
+      style={{ width: size * 0.86, height: size * 0.86, objectFit:"contain", display:"block" }}
     />
   </span>
 );
@@ -1122,26 +1125,1314 @@ function AIIntelligence() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// MODULE 5 — FARMER REGISTRY + SIGNUP
+// ═══════════════════════════════════════════════════════════════════════════════
+const FARMERS_REG = [
+  { id:"F001", name:"Grace Wanjiku",    phone:"+254 711 002 341", county:"Kiambu",     subCounty:"Limuru",    crops:"Avocado, Tea",        acres:3.5,  kyc:"Verified",  joined:"2024-11-12", credit:78, gender:"Female", coop:"Tigoni Growers Ltd" },
+  { id:"F002", name:"James Mwangi",     phone:"+254 722 410 882", county:"Meru",       subCounty:"Imenti N.", crops:"Coffee AA",           acres:5.2,  kyc:"Verified",  joined:"2024-09-04", credit:82, gender:"Male",   coop:"Meru Coffee Coop" },
+  { id:"F003", name:"Esther Njoroge",   phone:"+254 733 528 117", county:"Murang'a",   subCounty:"Kiharu",    crops:"Macadamia, Avocado",  acres:4.0,  kyc:"In Review", joined:"2025-01-22", credit:65, gender:"Female", coop:"Murang'a Pressers" },
+  { id:"F004", name:"Peter Mutua",      phone:"+254 715 904 220", county:"Makueni",    subCounty:"Kibwezi W.",crops:"Green Grams, Mango",  acres:6.8,  kyc:"Verified",  joined:"2024-07-30", credit:71, gender:"Male",   coop:"Makueni Pulses Coop" },
+  { id:"F005", name:"Mary Akinyi",      phone:"+254 720 118 553", county:"Kisumu",     subCounty:"Nyakach",   crops:"Kale, Sukuma",        acres:1.2,  kyc:"Pending",   joined:"2025-02-14", credit:48, gender:"Female", coop:"Lakeview Farms" },
+  { id:"F006", name:"Samuel Ruto",      phone:"+254 729 003 411", county:"Elgeyo",     subCounty:"Keiyo S.",  crops:"Onions, Maize",       acres:8.0,  kyc:"Verified",  joined:"2024-05-19", credit:88, gender:"Male",   coop:"Rift Valley Agri" },
+  { id:"F007", name:"Agnes Chepkoech",  phone:"+254 718 660 014", county:"Kirinyaga",  subCounty:"Mwea",      crops:"Tomatoes, Rice",      acres:2.5,  kyc:"Verified",  joined:"2024-12-08", credit:74, gender:"Female", coop:"Mwea Tomato Growers" },
+  { id:"F008", name:"David Kariuki",    phone:"+254 740 822 905", county:"Nyeri",      subCounty:"Tetu",      crops:"French Beans, Coffee",acres:3.1,  kyc:"Verified",  joined:"2024-08-22", credit:80, gender:"Male",   coop:"Central Highlands Veg" },
+  { id:"F009", name:"Joseph Kamau",     phone:"+254 712 446 738", county:"Nakuru",     subCounty:"Naivasha",  crops:"Maize, Wheat",        acres:12.0, kyc:"Pending",   joined:"2025-03-04", credit:55, gender:"Male",   coop:"Rift Valley Cereals" },
+  { id:"F010", name:"Lucy Wairimu",     phone:"+254 798 110 552", county:"Kiambu",     subCounty:"Lari",      crops:"Tea, Avocado",        acres:2.8,  kyc:"Verified",  joined:"2025-01-10", credit:69, gender:"Female", coop:"Tigoni Growers Ltd" },
+  { id:"F011", name:"Michael Otieno",   phone:"+254 724 003 891", county:"Homa Bay",   subCounty:"Mbita",     crops:"Fish, Sweet Potato",  acres:0.8,  kyc:"In Review", joined:"2025-02-28", credit:42, gender:"Male",   coop:"Lake Vic Fillets" },
+  { id:"F012", name:"Faith Nyambura",   phone:"+254 710 778 124", county:"Nyandarua",  subCounty:"Ndaragwa",  crops:"Pyrethrum, Potato",   acres:4.4,  kyc:"Verified",  joined:"2024-10-17", credit:76, gender:"Female", coop:"Ndaragwa Coop" },
+];
+const KYC_COLOR = (s) => s==="Verified"?C.shoot:s==="In Review"?C.amber:s==="Pending"?C.slate:C.crimson;
+
+// ── REAL CO-OP: KATHIANI HORTICULTURAL SHG (Machakos County) ─────────────────
+// Sourced from physical registration documents — Cert #3897042, Reg# SD/SHG/2016/29/03/359
+const KATHIANI_COOP = {
+  name:"Kathiani Horticultural Self-Help Group",
+  type:"Self-Help Group",
+  certNo:"3897042",
+  regNo:"SD/SHG/2016/29/03/359",
+  county:"Machakos",
+  subCounty:"Kathiani",
+  constituency:"Kathiani",
+  division:"Kathiani",
+  location:"Iveti",
+  ward:"Kaliluni",
+  postalAddress:"312 Machakos",
+  formed:"2015-05-07",
+  registered:"2016-03-29",
+  certIssued:"2020-11-26",
+  meetingVenue:"Kaliluni",
+  meetingDay:"Thursday",
+  meetingTime:"10:00 AM",
+  totalMembers:41,
+  womenAtReg:7,
+  menAtReg:18,
+  registrar:"Sammy O. Ogama (Sub County Social Development Officer)",
+  ministry:"Ministry of Labour and Social Protection · Dept of Social Development",
+  objectives:[
+    "Market accessibility for horticultural products",
+    "Opening up infrastructure",
+    "Equipping farmers with agricultural knowledge",
+  ],
+  currentActivities:["Farming","Zero grazing","Table banking"],
+  futurePlans:[
+    "Water tank construction",
+    "Setting up a dairy processing plant",
+    "Building a horticultural products marketing & distribution facility",
+  ],
+};
+
+const KATHIANI_MEMBERS = [
+  { no:1,  name:"Fredrick Wambua Ndana",  role:"Chairperson",      idNo:"13521680" },
+  { no:2,  name:"Fredrick Mating'i Nzomo",role:"V/Chairperson",    idNo:"11269214" },
+  { no:3,  name:"Musyoka Mukusyo",         role:"Secretary",        idNo:"20171359" },
+  { no:4,  name:"Alfred Kimeu Mutual",     role:"V/Secretary",      idNo:"21460735" },
+  { no:5,  name:"Bridgit Wanza Mbuvi",     role:"Treasurer",        idNo:"10979672" },
+  { no:6,  name:"Richard Muinde Kimuyu",   role:"Member",           idNo:"13521707" },
+  { no:7,  name:"Alex Kimuyu",             role:"Member",           idNo:"8966851"  },
+  { no:8,  name:"Nduku Munyao",            role:"Member",           idNo:"—"        },
+  { no:9,  name:"Nthenge Mutisya",         role:"Member",           idNo:"1693058"  },
+  { no:10, name:"James M. Kwitha",         role:"Member",           idNo:"20168595" },
+  { no:11, name:"Agnes M. Kilonzo",        role:"Member",           idNo:"1682581"  },
+  { no:12, name:"Syombua Mutua",           role:"Member",           idNo:"—"        },
+  { no:13, name:"Mutunga Munyao",          role:"Member",           idNo:"13830857" },
+  { no:14, name:"Mesembi Ndolo",           role:"Member",           idNo:"24018306" },
+  { no:15, name:"Mutinda Mumo",            role:"Member",           idNo:"31813779" },
+  { no:16, name:"Mutunga Munyao",          role:"Member",           idNo:"13830857" },
+  { no:17, name:"Jimmy Munguti",           role:"Member",           idNo:"7807808"  },
+  { no:18, name:"Mumbua Nzomo",            role:"Member",           idNo:"3494178"  },
+  { no:19, name:"Kiwai Mutuku",            role:"Member",           idNo:"9344083"  },
+  { no:20, name:"Peter Mutuku",            role:"Member",           idNo:"—"        },
+  { no:21, name:"Mavinda Makenzi",         role:"Member",           idNo:"29896040" },
+  { no:22, name:"Noah M. Muli",            role:"Member",           idNo:"—"        },
+  { no:23, name:"Benedict Masila",         role:"Member",           idNo:"1690612"  },
+  { no:24, name:"Mutinda Mutisya",         role:"Member",           idNo:"—"        },
+  { no:25, name:"Jacinta Charles",         role:"Member",           idNo:"24032102" },
+  { no:26, name:"Titus W. Maiko",          role:"Member",           idNo:"7808330"  },
+  { no:27, name:"Nzioka Mwenga",           role:"Member",           idNo:"1691820"  },
+  { no:28, name:"Joseph M. Mutiso",        role:"Member",           idNo:"20171359" },
+  { no:29, name:"Mutuku Kakungu",          role:"Member",           idNo:"—"        },
+  { no:30, name:"Munyaka Mutiso",          role:"Member",           idNo:"12538092" },
+  { no:31, name:"Munyao Tua",              role:"Member",           idNo:"—"        },
+  { no:32, name:"Munini Mutua",            role:"Member",           idNo:"—"        },
+  { no:33, name:"Damaris M. Mutual",       role:"Member",           idNo:"26816567" },
+  { no:34, name:"Alex M. Wambua",          role:"Member",           idNo:"—"        },
+  { no:35, name:"Timothy Ndege",           role:"Member",           idNo:"—"        },
+  { no:36, name:"Esther M. Musyoki",       role:"Member",           idNo:"1372955"  },
+  { no:37, name:"Charles Mulinge",         role:"Member",           idNo:"21264436" },
+  { no:38, name:"Simon M. Mbithi",         role:"Member",           idNo:"22854183" },
+  { no:39, name:"Amos Silas",              role:"Member",           idNo:"05344668" },
+  { no:40, name:"Isaac Muindi",            role:"Member",           idNo:"3543424"  },
+  { no:41, name:"Jones M. Ndonye",         role:"Member",           idNo:"—"        },
+];
+
+// QMS Form 59 — Energy Use Record from "Fred Farm" (Chairperson's farm)
+const FRED_FARM_ENERGY = [
+  { date:"2015-03-18", source:"Diesel/Oil", supplier:"Oil Libya", location:"Machakos",  qtyL:35, outL:32, balL:3,  issuedTo:"C"  },
+  { date:"2015-06-25", source:"Diesel/Oil", supplier:"Oil Libya", location:"Machakos",  qtyL:15, outL:8,  balL:7,  issuedTo:"A1" },
+  { date:"2015-01-06", source:"Diesel/Oil", supplier:"Oil Libya", location:"Machakos",  qtyL:12, outL:8,  balL:4,  issuedTo:"C"  },
+  { date:"2015-03-11", source:"Diesel/Oil", supplier:"Oil Libya", location:"Machakos",  qtyL:12, outL:8,  balL:6,  issuedTo:"A1-A4" },
+  { date:"2015-03-11", source:"Diesel/Oil", supplier:"Oil Libya", location:"Machakos",  qtyL:36, outL:22, balL:14, issuedTo:"A5-A7" },
+  { date:"2015-01-12", source:"Diesel/Oil", supplier:"Oil Libya", location:"Machakos",  qtyL:60, outL:28, balL:32, issuedTo:"A1-A4" },
+  { date:"2015-06-22", source:"Diesel/Oil", supplier:"Vivo",       location:"Machakos", qtyL:28, outL:18, balL:2,  issuedTo:"C"  },
+  { date:"2015-04-30", source:"Diesel/Oil", supplier:"Vivo",       location:"Machakos", qtyL:24, outL:18, balL:6,  issuedTo:"B1" },
+  { date:"2015-02-27", source:"Diesel/Oil", supplier:"Total",     location:"Lavington", qtyL:34, outL:27, balL:7,  issuedTo:"B1-B5" },
+  { date:"2015-06-22", source:"Diesel/Oil", supplier:"Kenol",     location:"Machakos",  qtyL:42, outL:36, balL:6,  issuedTo:"A5-A7" },
+];
+
+function KathianiCoopView() {
+  const [tab, setTab] = useState("profile");
+  const totalLitres = FRED_FARM_ENERGY.reduce((s,e)=>s+e.qtyL,0);
+  const totalUsed   = FRED_FARM_ENERGY.reduce((s,e)=>s+e.outL,0);
+  const totalBal    = FRED_FARM_ENERGY.reduce((s,e)=>s+e.balL,0);
+  const officials   = KATHIANI_MEMBERS.filter(m=>m.role!=="Member");
+
+  return (
+    <div>
+      {/* Hero card */}
+      <Card className="p-6 mb-5" style={{ background:`linear-gradient(135deg,${C.field}10,${C.lime}05)`, borderColor:C.field }}>
+        <div className="flex items-start justify-between flex-wrap gap-4">
+          <div className="flex-1 min-w-80">
+            <Badge label="Verified Co-operative · Cert #3897042" color={C.field} />
+            <p className="text-2xl font-black mt-2" style={{ color:C.ink, fontFamily:"'Barlow Condensed',sans-serif", letterSpacing:-0.4 }}>
+              {KATHIANI_COOP.name}
+            </p>
+            <p className="text-sm mt-1" style={{ color:C.slate }}>
+              📍 {KATHIANI_COOP.ward}, {KATHIANI_COOP.location}, {KATHIANI_COOP.subCounty} Sub-County · {KATHIANI_COOP.county} County
+            </p>
+            <p className="text-xs mt-2" style={{ color:C.slate }}>
+              {KATHIANI_COOP.ministry}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-xs" style={{ color:C.slate }}>Registered</p>
+            <p className="text-lg font-black" style={{ color:C.ink, fontFamily:"'Barlow Condensed',sans-serif" }}>{KATHIANI_COOP.registered}</p>
+            <p className="text-xs mt-2" style={{ color:C.slate }}>Cert issued</p>
+            <p className="text-sm font-bold" style={{ color:C.field }}>{KATHIANI_COOP.certIssued}</p>
+          </div>
+        </div>
+      </Card>
+
+      <div className="grid grid-cols-4 gap-4 mb-5">
+        <KpiCard icon="👥" label="Total Members"     value={KATHIANI_COOP.totalMembers}                   sub={`${KATHIANI_COOP.womenAtReg}W · ${KATHIANI_COOP.menAtReg}M at registration`} color={C.field} />
+        <KpiCard icon="📅" label="Years Active"       value={2026 - new Date(KATHIANI_COOP.formed).getFullYear()} sub={`Formed ${KATHIANI_COOP.formed}`}              color={C.shoot} />
+        <KpiCard icon="⛽" label="Energy Logged · L"  value={totalLitres}                                  sub={`${FRED_FARM_ENERGY.length} purchases tracked`} color={C.harvest} />
+        <KpiCard icon="🤝" label="Meeting Cadence"    value={KATHIANI_COOP.meetingDay}                     sub={`${KATHIANI_COOP.meetingTime} · ${KATHIANI_COOP.meetingVenue}`} color={C.violet} />
+      </div>
+
+      <div className="flex gap-1 p-1 rounded-xl mb-5 inline-flex" style={{ background:C.mist, border:`1px solid ${C.border}` }}>
+        {[["profile","🏛️ Group Profile"],["roster",`📋 Roster · ${KATHIANI_MEMBERS.length}`],["energy","⛽ Energy Log · Fred Farm"],["plans","🎯 Plans & Activities"]].map(([id,l])=>(
+          <button key={id} onClick={()=>setTab(id)} className="px-3 py-1.5 rounded-lg text-xs font-bold"
+            style={{ background:tab===id?"#fff":"transparent", color:tab===id?C.ink:C.slate, boxShadow:tab===id?"0 1px 3px rgba(0,0,0,.1)":"none" }}>{l}</button>
+        ))}
+      </div>
+
+      {/* PROFILE */}
+      {tab==="profile" && (
+        <div className="grid grid-cols-3 gap-5">
+          <Card className="col-span-2 p-5">
+            <p className="text-xs font-black uppercase tracking-wider mb-4" style={{ color:C.slate }}>Registration Details</p>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-2.5">
+              {[
+                ["Group Name",        KATHIANI_COOP.name],
+                ["Type",              KATHIANI_COOP.type],
+                ["Certificate No.",   KATHIANI_COOP.certNo],
+                ["Registration No.",  KATHIANI_COOP.regNo],
+                ["County",            KATHIANI_COOP.county],
+                ["Sub-County",        KATHIANI_COOP.subCounty],
+                ["Constituency",      KATHIANI_COOP.constituency],
+                ["Division",          KATHIANI_COOP.division],
+                ["Location",          KATHIANI_COOP.location],
+                ["Ward",              KATHIANI_COOP.ward],
+                ["Postal Address",    KATHIANI_COOP.postalAddress],
+                ["Date Formed",       KATHIANI_COOP.formed],
+                ["Date Registered",   KATHIANI_COOP.registered],
+                ["Cert Issued",       KATHIANI_COOP.certIssued],
+                ["Meeting Venue",     KATHIANI_COOP.meetingVenue],
+                ["Meeting Schedule",  `${KATHIANI_COOP.meetingDay} · ${KATHIANI_COOP.meetingTime}`],
+              ].map(([k,v])=>(
+                <div key={k} className="flex justify-between text-xs py-1" style={{ borderBottom:`1px solid ${C.border}` }}>
+                  <span style={{ color:C.slate }}>{k}</span>
+                  <span className="font-bold text-right" style={{ color:C.ink }}>{v}</span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 p-3 rounded-xl" style={{ background:C.mist, border:`1px solid ${C.border}` }}>
+              <p className="text-xs font-bold mb-1" style={{ color:C.slate }}>Registered by</p>
+              <p className="text-sm font-bold" style={{ color:C.ink }}>{KATHIANI_COOP.registrar}</p>
+            </div>
+          </Card>
+
+          <div className="space-y-4">
+            <Card className="p-5">
+              <p className="text-xs font-black uppercase tracking-wider mb-3" style={{ color:C.slate }}>Management Committee</p>
+              {officials.map(o=>(
+                <div key={o.no} className="flex items-center gap-2.5 py-2" style={{ borderBottom:`1px solid ${C.border}` }}>
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-black text-white" style={{ background:C.field }}>
+                    {o.name.split(" ").map(n=>n[0]).join("").slice(0,2)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold truncate" style={{ color:C.ink }}>{o.name}</p>
+                    <p className="text-xs" style={{ color:C.slate }}>{o.role} · ID {o.idNo}</p>
+                  </div>
+                </div>
+              ))}
+            </Card>
+            <Card className="p-5">
+              <p className="text-xs font-black uppercase tracking-wider mb-2" style={{ color:C.slate }}>Group Objectives</p>
+              <ul className="space-y-1.5">
+                {KATHIANI_COOP.objectives.map(o=>(
+                  <li key={o} className="text-xs flex items-start gap-2"><span style={{ color:C.field }}>✓</span><span style={{ color:C.ink }}>{o}</span></li>
+                ))}
+              </ul>
+            </Card>
+          </div>
+        </div>
+      )}
+
+      {/* ROSTER */}
+      {tab==="roster" && (
+        <Card className="overflow-hidden">
+          <div className="px-5 py-3 flex items-center justify-between" style={{ borderBottom:`1px solid ${C.border}` }}>
+            <p className="text-sm font-black" style={{ color:C.ink }}>Membership Roster · {KATHIANI_MEMBERS.length} members</p>
+            <Badge label="Source: Group Register" color={C.slate} />
+          </div>
+          <table className="w-full text-sm">
+            <thead><tr style={{ background:C.mist }}>
+              {["#","Name","Role","National ID"].map(h=>(
+                <th key={h} className="px-4 py-2.5 text-left text-xs font-black uppercase tracking-wider" style={{ color:C.slate }}>{h}</th>
+              ))}
+            </tr></thead>
+            <tbody>{KATHIANI_MEMBERS.map((m,i)=>(
+              <tr key={m.no+"-"+m.name} style={{ borderBottom:`1px solid ${C.border}`, background:i%2===0?"#fff":"#FAFAF8" }}>
+                <td className="px-4 py-2 text-xs font-mono" style={{ color:C.slate }}>{m.no}</td>
+                <td className="px-4 py-2 text-xs font-bold" style={{ color:C.ink }}>{m.name}</td>
+                <td className="px-4 py-2"><Badge label={m.role} color={m.role==="Member"?C.slate:C.field} /></td>
+                <td className="px-4 py-2 text-xs font-mono" style={{ color:m.idNo==="—"?C.crimson:C.ink }}>{m.idNo}</td>
+              </tr>
+            ))}</tbody>
+          </table>
+        </Card>
+      )}
+
+      {/* ENERGY LOG */}
+      {tab==="energy" && (
+        <div>
+          <Card className="p-4 mb-4" style={{ background:`${C.harvest}08`, borderColor:`${C.harvest}30` }}>
+            <p className="text-xs" style={{ color:C.slate }}>
+              <span className="font-bold" style={{ color:C.ink }}>QMS Form 59 · Energy Use Record</span> — sourced from Fred Farm (Chairperson) field-level paper records, 2015 calendar year. Issue No. 001 · Effective 01/08/2015 · Approved by Agronomist.
+            </p>
+          </Card>
+          <div className="grid grid-cols-3 gap-4 mb-4">
+            <KpiCard icon="📥" label="Litres Purchased" value={totalLitres} sub="across 10 transactions" color={C.field} />
+            <KpiCard icon="📤" label="Litres Used"      value={totalUsed}   sub={`${Math.round((totalUsed/totalLitres)*100)}% utilisation`} color={C.shoot} />
+            <KpiCard icon="🛢️" label="Litres Balance"  value={totalBal}    sub="end-of-year stock"        color={C.harvest} />
+          </div>
+          <Card className="overflow-hidden">
+            <table className="w-full text-sm">
+              <thead><tr style={{ background:C.mist }}>
+                {["Date","Source","Supplier","Location","Qty (L)","Out (L)","Balance (L)","Issued To"].map(h=>(
+                  <th key={h} className="px-4 py-2.5 text-left text-xs font-black uppercase tracking-wider" style={{ color:C.slate }}>{h}</th>
+                ))}
+              </tr></thead>
+              <tbody>{FRED_FARM_ENERGY.map((e,i)=>(
+                <tr key={i} style={{ borderBottom:`1px solid ${C.border}`, background:i%2===0?"#fff":"#FAFAF8" }}>
+                  <td className="px-4 py-2 text-xs font-mono" style={{ color:C.slate }}>{e.date}</td>
+                  <td className="px-4 py-2 text-xs font-bold" style={{ color:C.ink }}>{e.source}</td>
+                  <td className="px-4 py-2"><Badge label={e.supplier} color={e.supplier==="Oil Libya"?C.crimson:e.supplier==="Vivo"?C.sky:e.supplier==="Total"?C.violet:C.harvest} /></td>
+                  <td className="px-4 py-2 text-xs" style={{ color:C.slate }}>{e.location}</td>
+                  <td className="px-4 py-2 text-xs font-mono font-bold">{e.qtyL}</td>
+                  <td className="px-4 py-2 text-xs font-mono">{e.outL}</td>
+                  <td className="px-4 py-2 text-xs font-mono font-bold" style={{ color:e.balL>5?C.shoot:C.amber }}>{e.balL}</td>
+                  <td className="px-4 py-2 text-xs font-mono" style={{ color:C.slate }}>{e.issuedTo}</td>
+                </tr>
+              ))}</tbody>
+            </table>
+          </Card>
+          <Card className="p-4 mt-4">
+            <p className="text-xs font-black uppercase tracking-wider mb-3" style={{ color:C.slate }}>Spend by Supplier</p>
+            <ResponsiveContainer width="100%" height={180}>
+              <BarChart data={Object.entries(FRED_FARM_ENERGY.reduce((a,e)=>{ a[e.supplier]=(a[e.supplier]||0)+e.qtyL; return a; },{})).map(([supplier,litres])=>({ supplier, litres }))}>
+                <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
+                <XAxis dataKey="supplier" tick={{ fontSize:11, fill:C.slate }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize:11, fill:C.slate }} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={{ borderRadius:10, border:"none", fontSize:12 }} />
+                <Bar dataKey="litres" radius={[8,8,0,0]} fill={C.harvest} />
+              </BarChart>
+            </ResponsiveContainer>
+          </Card>
+        </div>
+      )}
+
+      {/* PLANS */}
+      {tab==="plans" && (
+        <div className="grid grid-cols-2 gap-5">
+          <Card className="p-5">
+            <p className="text-xs font-black uppercase tracking-wider mb-3" style={{ color:C.field }}>Current Activities</p>
+            {KATHIANI_COOP.currentActivities.map((a,i)=>(
+              <div key={a} className="flex items-start gap-3 p-3 rounded-xl mb-2" style={{ background:`${C.shoot}08`, border:`1px solid ${C.shoot}25` }}>
+                <span className="text-xl">{i===0?"🌾":i===1?"🐄":"💰"}</span>
+                <div><p className="text-sm font-bold" style={{ color:C.ink }}>{a}</p><p className="text-xs mt-0.5" style={{ color:C.slate }}>Active since registration</p></div>
+              </div>
+            ))}
+          </Card>
+          <Card className="p-5">
+            <p className="text-xs font-black uppercase tracking-wider mb-3" style={{ color:C.harvest }}>Future Plans</p>
+            {KATHIANI_COOP.futurePlans.map((p,i)=>(
+              <div key={p} className="flex items-start gap-3 p-3 rounded-xl mb-2" style={{ background:`${C.harvest}08`, border:`1px solid ${C.harvest}25` }}>
+                <span className="text-xl">{i===0?"💧":i===1?"🥛":"🏪"}</span>
+                <div><p className="text-sm font-bold" style={{ color:C.ink }}>{p}</p><p className="text-xs mt-0.5" style={{ color:C.slate }}>Planned · awaits funding/partnership</p></div>
+              </div>
+            ))}
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FarmerRegistry() {
+  const [view, setView] = useState("farmers");
+  const [q, setQ] = useState("");
+  const [filter, setFilter] = useState("all");
+  const [showSignup, setShowSignup] = useState(false);
+  const [selected, setSelected] = useState(null);
+
+  const visible = useMemo(() => FARMERS_REG.filter(f => {
+    const matchQ = !q || f.name.toLowerCase().includes(q.toLowerCase()) || f.county.toLowerCase().includes(q.toLowerCase()) || f.crops.toLowerCase().includes(q.toLowerCase());
+    const matchF = filter==="all" || (filter==="verified" && f.kyc==="Verified") || (filter==="pending" && f.kyc!=="Verified") || (filter==="female" && f.gender==="Female") || (filter==="male" && f.gender==="Male");
+    return matchQ && matchF;
+  }), [q, filter]);
+
+  const verified = FARMERS_REG.filter(f=>f.kyc==="Verified").length;
+  const female   = FARMERS_REG.filter(f=>f.gender==="Female").length;
+  const totalAcres = FARMERS_REG.reduce((s,f)=>s+f.acres,0);
+  const avgCredit  = Math.round(FARMERS_REG.reduce((s,f)=>s+f.credit,0)/FARMERS_REG.length);
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <SectionTitle sub="KYC verification · Co-op enrolment · Credit scoring · Demographic insights">
+          👥 Farmer Registry &amp; Signup
+        </SectionTitle>
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1 p-1 rounded-xl" style={{ background:C.mist, border:`1px solid ${C.border}` }}>
+            {[["farmers","👤 Farmers"],["coops","🤝 Co-operatives"]].map(([id,l])=>(
+              <button key={id} onClick={()=>setView(id)} className="px-3 py-1.5 rounded-lg text-xs font-bold"
+                style={{ background:view===id?"#fff":"transparent", color:view===id?C.ink:C.slate, boxShadow:view===id?"0 1px 3px rgba(0,0,0,.1)":"none" }}>{l}</button>
+            ))}
+          </div>
+          <button onClick={()=>setShowSignup(true)} className="px-4 py-2 rounded-xl text-sm font-bold text-white" style={{ background:C.field }}>
+            + Onboard Farmer
+          </button>
+        </div>
+      </div>
+
+      {view==="farmers" && (<>
+      <div className="grid grid-cols-4 gap-4 mb-5">
+        <KpiCard icon="👥" label="Registered Farmers"  value={FARMERS_REG.length}                 sub="across 24 counties"          color={C.field} />
+        <KpiCard icon="✅" label="KYC Verified"        value={`${verified}/${FARMERS_REG.length}`} sub={`${Math.round(verified/FARMERS_REG.length*100)}% complete`} color={C.shoot} />
+        <KpiCard icon="🌾" label="Total Acres"          value={totalAcres.toFixed(1)}              sub="under cultivation"           color={C.harvest} />
+        <KpiCard icon="📊" label="Avg Credit Score"     value={avgCredit}                          sub={`${female} women farmers`}    color={C.violet} />
+      </div>
+
+      <div className="flex gap-3 mb-4 flex-wrap">
+        <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search by name, county, crop…"
+          className="flex-1 min-w-40 border rounded-xl px-3.5 py-2 text-sm focus:outline-none"
+          style={{ borderColor:C.border, background:C.mist }} />
+        {[["all","All Farmers"],["verified","KYC Verified"],["pending","Pending KYC"],["female","Female"],["male","Male"]].map(([id,l])=>(
+          <button key={id} onClick={()=>setFilter(id)} className="px-3 py-2 rounded-xl text-xs font-bold"
+            style={{ background:filter===id?C.field:C.mist, color:filter===id?"#fff":C.slate, border:`1px solid ${filter===id?C.field:C.border}` }}>{l}</button>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-3 gap-5">
+        <div className="col-span-2">
+          <Card className="overflow-hidden">
+            <table className="w-full text-sm">
+              <thead><tr style={{ background:C.mist }}>
+                {["Farmer","Location","Crops","Acres","KYC","Credit"].map(h=>(
+                  <th key={h} className="px-4 py-2.5 text-left text-xs font-black uppercase tracking-wider" style={{ color:C.slate }}>{h}</th>
+                ))}
+              </tr></thead>
+              <tbody>{visible.map((f,i)=>(
+                <tr key={f.id} onClick={()=>setSelected(selected?.id===f.id?null:f)} className="cursor-pointer hover:bg-stone-50"
+                  style={{ borderBottom:`1px solid ${C.border}`, background:selected?.id===f.id?`${C.field}08`:i%2===0?"#fff":"#FAFAF8" }}>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black text-white" style={{ background:f.gender==="Female"?C.violet:C.field }}>
+                        {f.name.split(" ").map(n=>n[0]).join("").slice(0,2)}
+                      </div>
+                      <div><p className="text-xs font-black" style={{ color:C.ink }}>{f.name}</p><p className="text-xs font-mono" style={{ color:C.slate }}>{f.id}</p></div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-xs"><p className="font-bold" style={{ color:C.ink }}>{f.county}</p><p style={{ color:C.slate }}>{f.subCounty}</p></td>
+                  <td className="px-4 py-3 text-xs" style={{ color:C.slate }}>{f.crops}</td>
+                  <td className="px-4 py-3 text-xs font-mono font-bold">{f.acres}</td>
+                  <td className="px-4 py-3"><Badge label={f.kyc} color={KYC_COLOR(f.kyc)} /></td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-12 h-1.5 rounded-full" style={{ background:C.border }}>
+                        <div className="h-full rounded-full" style={{ width:`${f.credit}%`, background:f.credit>=70?C.shoot:f.credit>=50?C.amber:C.crimson }} />
+                      </div>
+                      <span className="text-xs font-black" style={{ color:f.credit>=70?C.shoot:f.credit>=50?C.amber:C.crimson }}>{f.credit}</span>
+                    </div>
+                  </td>
+                </tr>
+              ))}</tbody>
+            </table>
+          </Card>
+        </div>
+
+        <div className="space-y-4">
+          {selected ? (
+            <Card className="p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-black text-white" style={{ background:selected.gender==="Female"?C.violet:C.field }}>
+                  {selected.name.split(" ").map(n=>n[0]).join("").slice(0,2)}
+                </div>
+                <div>
+                  <p className="text-base font-black" style={{ color:C.ink }}>{selected.name}</p>
+                  <p className="text-xs" style={{ color:C.slate }}>{selected.phone}</p>
+                </div>
+              </div>
+              <div className="space-y-2 mb-4">
+                {[["County",selected.county],["Sub-county",selected.subCounty],["Crops",selected.crops],["Acres",selected.acres],["Co-operative",selected.coop],["Joined",selected.joined],["Gender",selected.gender]].map(([k,v])=>(
+                  <div key={k} className="flex justify-between text-xs"><span style={{ color:C.slate }}>{k}</span><span className="font-bold" style={{ color:C.ink }}>{v}</span></div>
+                ))}
+              </div>
+              <button className="w-full px-3 py-2 rounded-xl text-xs font-bold text-white" style={{ background:C.field }}>View Full Profile</button>
+            </Card>
+          ) : (
+            <Card className="p-4">
+              <p className="text-xs font-black uppercase tracking-wider mb-3" style={{ color:C.slate }}>KYC Pipeline</p>
+              {[["Verified",verified,C.shoot],["In Review",FARMERS_REG.filter(f=>f.kyc==="In Review").length,C.amber],["Pending",FARMERS_REG.filter(f=>f.kyc==="Pending").length,C.slate]].map(([l,v,c])=>(
+                <StatRow key={l} label={l} value={v} bar={Math.round((v/FARMERS_REG.length)*100)} color={c} />
+              ))}
+            </Card>
+          )}
+          <Card className="p-4">
+            <p className="text-xs font-black uppercase tracking-wider mb-3" style={{ color:C.slate }}>Top Counties</p>
+            {Object.entries(FARMERS_REG.reduce((a,f)=>{ a[f.county]=(a[f.county]||0)+1; return a; },{})).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([c,n])=>(
+              <StatRow key={c} label={c} value={n} bar={Math.round((n/FARMERS_REG.length)*100*4)} color={C.field} />
+            ))}
+          </Card>
+        </div>
+      </div>
+      </>)}
+
+      {view==="coops" && <KathianiCoopView />}
+
+      {showSignup && (
+        <div onClick={()=>setShowSignup(false)} style={{ position:"fixed", inset:0, background:"rgba(12,26,14,0.55)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:50, padding:20 }}>
+          <Card onClick={e=>e.stopPropagation()} className="w-full max-w-lg p-6">
+            <p className="text-xl font-black mb-1" style={{ fontFamily:"'Barlow Condensed',sans-serif", color:C.ink }}>Onboard New Farmer</p>
+            <p className="text-xs mb-5" style={{ color:C.slate }}>SMS-friendly signup · USSD fallback supported · Auto-syncs to Co-op registry</p>
+            <div className="grid grid-cols-2 gap-3">
+              {[["First name","Grace"],["Last name","Wanjiku"],["Phone (M-Pesa)","+254 7xx xxx xxx"],["National ID","12345678"],["County","Kiambu"],["Sub-county","Limuru"],["Primary crop","Avocado"],["Acres","3.5"]].map(([l,p])=>(
+                <div key={l}>
+                  <label className="text-xs font-bold mb-1 block" style={{ color:C.slate }}>{l}</label>
+                  <input placeholder={p} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none" style={{ borderColor:C.border }} />
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2 mt-5">
+              <button onClick={()=>setShowSignup(false)} className="flex-1 px-3 py-2 rounded-xl text-sm font-bold" style={{ background:C.mist, color:C.slate, border:`1px solid ${C.border}` }}>Cancel</button>
+              <button onClick={()=>setShowSignup(false)} className="flex-1 px-3 py-2 rounded-xl text-sm font-bold text-white" style={{ background:C.field }}>Send SMS Invite →</button>
+            </div>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MODULE 6 — TRADE ASSESSMENT (BUYER DUE DILIGENCE + DEAL HEALTH)
+// ═══════════════════════════════════════════════════════════════════════════════
+const BUYERS = [
+  { id:"B001", name:"Hamburg Traders GmbH",      country:"Germany",     established:1998, paid:42, late:1,  defaults:0, rating:94, tier:"AAA", category:"Coffee · Tea", lastDeal:"Apr 24, 2026",  flag:"🇩🇪" },
+  { id:"B002", name:"Tesco Supermarkets UK",      country:"UK",          established:1919, paid:31, late:2,  defaults:0, rating:91, tier:"AA",  category:"Fresh Veg · Fruit", lastDeal:"Apr 18, 2026", flag:"🇬🇧" },
+  { id:"B003", name:"Specialty Roasters JP",      country:"Japan",       established:2008, paid:18, late:0,  defaults:0, rating:96, tier:"AAA", category:"Premium Coffee", lastDeal:"Apr 22, 2026", flag:"🇯🇵" },
+  { id:"B004", name:"BioSource Netherlands",       country:"Netherlands", established:2014, paid:11, late:1,  defaults:0, rating:84, tier:"AA",  category:"Tea · Superfoods", lastDeal:"Apr 26, 2026", flag:"🇳🇱" },
+  { id:"B005", name:"African Roots Canada",        country:"Canada",      established:2019, paid:8,  late:0,  defaults:0, rating:88, tier:"AA",  category:"Macadamia · Nuts", lastDeal:"Apr 18, 2026", flag:"🇨🇦" },
+  { id:"B006", name:"Doha Fresh Trading LLC",     country:"Qatar",       established:2017, paid:14, late:3,  defaults:1, rating:62, tier:"BB",  category:"Avocado · Mango", lastDeal:"Mar 28, 2026", flag:"🇶🇦" },
+  { id:"B007", name:"Istanbul Agri Imports",      country:"Turkey",      established:2012, paid:9,  late:2,  defaults:0, rating:71, tier:"A",   category:"Avocado", lastDeal:"Apr 04, 2026", flag:"🇹🇷" },
+  { id:"B008", name:"Dubai Wholesale Markets",     country:"UAE",        established:2010, paid:22, late:1,  defaults:0, rating:86, tier:"AA",  category:"Mixed Produce", lastDeal:"Apr 15, 2026", flag:"🇦🇪" },
+];
+const TIER_COLOR = (t) => t==="AAA"?C.shoot:t==="AA"?C.field:t==="A"?C.sky:t==="BB"?C.amber:C.crimson;
+const ASSESSMENT_TREND = [
+  { m:"Oct", score:78 },{ m:"Nov", score:80 },{ m:"Dec", score:81 },
+  { m:"Jan", score:83 },{ m:"Feb", score:84 },{ m:"Mar", score:86 },{ m:"Apr", score:87 },
+];
+
+function TradeAssessment() {
+  const [selected, setSelected] = useState(BUYERS[0]);
+  const portfolioAvg = Math.round(BUYERS.reduce((s,b)=>s+b.rating,0)/BUYERS.length);
+  const aaa = BUYERS.filter(b=>b.tier==="AAA").length;
+  const flagged = BUYERS.filter(b=>b.rating<70).length;
+
+  return (
+    <div>
+      <SectionTitle sub="Counterparty risk scoring · Payment history · Trade health · KYB due diligence">
+        📈 Trade Assessment
+      </SectionTitle>
+
+      <div className="grid grid-cols-4 gap-4 mb-5">
+        <KpiCard icon="🤝" label="Active Buyers"      value={BUYERS.length}    sub="vetted counterparties"        color={C.field} />
+        <KpiCard icon="⭐" label="AAA-Rated"          value={aaa}              sub="lowest-risk tier"             color={C.shoot} />
+        <KpiCard icon="📊" label="Portfolio Avg"      value={portfolioAvg}     sub="weighted risk score"          color={C.sky} />
+        <KpiCard icon="⚠️" label="Flagged"            value={flagged}          sub="require enhanced DD"          color={C.crimson} />
+      </div>
+
+      <div className="grid grid-cols-3 gap-5">
+        <div className="col-span-2 space-y-2.5">
+          {BUYERS.map(b=>(
+            <div key={b.id} onClick={()=>setSelected(b)} className="rounded-xl border p-3.5 cursor-pointer transition-all hover:shadow-sm"
+              style={{ background:selected?.id===b.id?`${C.field}08`:"#fff", borderColor:selected?.id===b.id?C.field:C.border, borderWidth:selected?.id===b.id?2:1 }}>
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">{b.flag}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-black" style={{ color:C.ink }}>{b.name}</span>
+                    <Badge label={`Tier ${b.tier}`} color={TIER_COLOR(b.tier)} />
+                  </div>
+                  <p className="text-xs mt-0.5" style={{ color:C.slate }}>{b.country} · est {b.established} · {b.category}</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-xl font-black" style={{ color:TIER_COLOR(b.tier), fontFamily:"'Barlow Condensed',sans-serif" }}>{b.rating}</p>
+                  <p className="text-xs" style={{ color:C.slate }}>{b.paid} on time · {b.late} late</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="space-y-4">
+          <Card className="p-5">
+            <p className="text-xs font-black uppercase tracking-wider mb-2" style={{ color:C.slate }}>Detail · {selected.id}</p>
+            <p className="text-base font-black mb-1" style={{ color:C.ink }}>{selected.flag} {selected.name}</p>
+            <Badge label={`Tier ${selected.tier} · ${selected.rating}/100`} color={TIER_COLOR(selected.tier)} />
+            <div className="mt-4 space-y-2">
+              {[["Country",selected.country],["Established",selected.established],["Category",selected.category],["Last deal",selected.lastDeal],["Paid on time",selected.paid],["Late payments",selected.late],["Defaults",selected.defaults]].map(([k,v])=>(
+                <div key={k} className="flex justify-between text-xs"><span style={{ color:C.slate }}>{k}</span><span className="font-bold" style={{ color:C.ink }}>{v}</span></div>
+              ))}
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <button className="px-3 py-2 rounded-xl text-xs font-bold text-white" style={{ background:C.field }}>Run KYB</button>
+              <button className="px-3 py-2 rounded-xl text-xs font-bold" style={{ background:C.sky+"15", color:C.sky, border:`1px solid ${C.sky}30` }}>View Trades</button>
+            </div>
+          </Card>
+          <Card className="p-4">
+            <p className="text-xs font-black uppercase tracking-wider mb-3" style={{ color:C.slate }}>Portfolio Score · 7-mo</p>
+            <ResponsiveContainer width="100%" height={140}>
+              <AreaChart data={ASSESSMENT_TREND}>
+                <defs><linearGradient id="ascore" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={C.field} stopOpacity={0.4}/><stop offset="100%" stopColor={C.field} stopOpacity={0}/></linearGradient></defs>
+                <XAxis dataKey="m" tick={{ fontSize:10, fill:C.slate }} axisLine={false} tickLine={false} />
+                <YAxis hide domain={[60,100]} />
+                <Tooltip contentStyle={{ borderRadius:10, border:"none", fontSize:12 }} />
+                <Area type="monotone" dataKey="score" stroke={C.field} strokeWidth={2} fill="url(#ascore)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MODULE 7 — SAAS SUBSCRIPTIONS (BILLING + PLANS)
+// ═══════════════════════════════════════════════════════════════════════════════
+const PLANS = [
+  { id:"starter",    name:"Starter",    priceKES:0,      farmers:50,   features:["Marketplace listings","SMS alerts","M-Pesa checkout","Basic analytics"], color:C.slate,   badge:"Free" },
+  { id:"growth",     name:"Growth",     priceKES:9500,   farmers:500,  features:["Everything in Starter","Co-op management","Weather & yield AI","Compliance tracker","Priority support"], color:C.field,    badge:"Most Popular" },
+  { id:"enterprise", name:"Enterprise", priceKES:38000,  farmers:5000, features:["Everything in Growth","Custom domain","API + Webhooks","Dedicated CSM","White-label mobile app","On-prem option"], color:C.harvest, badge:"Best Value" },
+];
+const SUBS_BY_PLAN = [
+  { name:"Starter",    count:62, mrr:0 },
+  { name:"Growth",     count:34, mrr:323000 },
+  { name:"Enterprise", count:8,  mrr:304000 },
+];
+const MRR_TREND = [
+  { m:"Oct", mrr:412 },{ m:"Nov", mrr:456 },{ m:"Dec", mrr:498 },
+  { m:"Jan", mrr:548 },{ m:"Feb", mrr:589 },{ m:"Mar", mrr:614 },{ m:"Apr", mrr:627 },
+];
+const RECENT_INVOICES = [
+  { id:"INV-2026-0241", org:"Tigoni Growers Ltd",   plan:"Growth",     amount:9500,   status:"Paid",    date:"Apr 28" },
+  { id:"INV-2026-0240", org:"Meru Coffee Coop",      plan:"Growth",     amount:9500,   status:"Paid",    date:"Apr 27" },
+  { id:"INV-2026-0239", org:"XCADO Group Limited",  plan:"Enterprise", amount:38000,  status:"Paid",    date:"Apr 25" },
+  { id:"INV-2026-0238", org:"Mwea Tomato Growers",   plan:"Growth",     amount:9500,   status:"Pending", date:"Apr 24" },
+  { id:"INV-2026-0237", org:"Lake Vic Fillets",      plan:"Starter",    amount:0,      status:"N/A",     date:"Apr 22" },
+  { id:"INV-2026-0236", org:"Murang'a Pressers",     plan:"Enterprise", amount:38000,  status:"Failed",  date:"Apr 20" },
+];
+
+function SaaSSubscriptions() {
+  const totalMRR = SUBS_BY_PLAN.reduce((s,p)=>s+p.mrr,0);
+  const totalSubs = SUBS_BY_PLAN.reduce((s,p)=>s+p.count,0);
+  const arr = totalMRR * 12;
+
+  return (
+    <div>
+      <SectionTitle sub="Plan distribution · MRR & ARR · Recent invoices · Plan upgrades">
+        💎 SaaS Subscriptions
+      </SectionTitle>
+
+      <div className="grid grid-cols-4 gap-4 mb-5">
+        <KpiCard icon="🏢" label="Active Subs"     value={totalSubs}                 sub="across 24 counties"          color={C.field} />
+        <KpiCard icon="💰" label="MRR"             value={`KES ${(totalMRR/1000).toFixed(0)}K`} sub="recurring monthly"   color={C.shoot} />
+        <KpiCard icon="📊" label="ARR"             value={`KES ${(arr/1e6).toFixed(2)}M`}      sub="annualised"          color={C.harvest} />
+        <KpiCard icon="📈" label="Net New / mo"    value="+13"                       sub="last 30 days"                 color={C.sky} />
+      </div>
+
+      <div className="grid grid-cols-3 gap-5 mb-5">
+        {PLANS.map(p=>(
+          <Card key={p.id} className="p-5" style={{ borderColor:p.color, borderWidth:p.id==="growth"?2:1 }}>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-lg font-black" style={{ fontFamily:"'Barlow Condensed',sans-serif", color:p.color }}>{p.name}</p>
+              <Badge label={p.badge} color={p.color} />
+            </div>
+            <p className="text-3xl font-black" style={{ color:C.ink, fontFamily:"'Barlow Condensed',sans-serif" }}>
+              {p.priceKES===0 ? "Free" : `KES ${p.priceKES.toLocaleString()}`}
+            </p>
+            <p className="text-xs mb-4" style={{ color:C.slate }}>{p.priceKES===0?"Forever free":"per month · billed annually"}</p>
+            <p className="text-xs font-bold mb-2" style={{ color:C.slate }}>Up to {p.farmers.toLocaleString()} farmers</p>
+            <ul className="space-y-1.5 mb-4">
+              {p.features.map(f=>(
+                <li key={f} className="text-xs flex items-start gap-2"><span style={{ color:p.color }}>✓</span><span style={{ color:C.ink }}>{f}</span></li>
+              ))}
+            </ul>
+            <button className="w-full px-3 py-2 rounded-xl text-xs font-bold text-white" style={{ background:p.color }}>
+              {p.id==="starter"?"Start Free":p.id==="growth"?"Upgrade →":"Contact Sales"}
+            </button>
+          </Card>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-3 gap-5">
+        <Card className="col-span-2 p-5">
+          <p className="text-xs font-black uppercase tracking-wider mb-3" style={{ color:C.slate }}>MRR Growth · USD thousands</p>
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={MRR_TREND}>
+              <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
+              <XAxis dataKey="m" tick={{ fontSize:11, fill:C.slate }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize:11, fill:C.slate }} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={{ borderRadius:10, border:"none", fontSize:12 }} />
+              <Line type="monotone" dataKey="mrr" stroke={C.field} strokeWidth={3} dot={{ fill:C.field, r:4 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </Card>
+        <Card className="p-5">
+          <p className="text-xs font-black uppercase tracking-wider mb-3" style={{ color:C.slate }}>Plan Mix</p>
+          <ResponsiveContainer width="100%" height={180}>
+            <PieChart>
+              <Pie data={SUBS_BY_PLAN} dataKey="count" nameKey="name" cx="50%" cy="50%" outerRadius={70} innerRadius={40} label={(e)=>`${e.name} ${e.count}`}>
+                {SUBS_BY_PLAN.map((p,i)=>(<Cell key={i} fill={i===0?C.slate:i===1?C.field:C.harvest} />))}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+        </Card>
+      </div>
+
+      <Card className="mt-5 overflow-hidden">
+        <div className="px-5 py-3" style={{ borderBottom:`1px solid ${C.border}` }}>
+          <p className="text-sm font-black" style={{ color:C.ink }}>Recent Invoices</p>
+        </div>
+        <table className="w-full text-sm">
+          <thead><tr style={{ background:C.mist }}>
+            {["Invoice","Organisation","Plan","Amount","Status","Date"].map(h=>(
+              <th key={h} className="px-4 py-2.5 text-left text-xs font-black uppercase tracking-wider" style={{ color:C.slate }}>{h}</th>
+            ))}
+          </tr></thead>
+          <tbody>{RECENT_INVOICES.map((inv,i)=>(
+            <tr key={inv.id} style={{ borderBottom:`1px solid ${C.border}`, background:i%2===0?"#fff":"#FAFAF8" }}>
+              <td className="px-4 py-3 font-mono text-xs" style={{ color:C.slate }}>{inv.id}</td>
+              <td className="px-4 py-3 text-xs font-bold" style={{ color:C.ink }}>{inv.org}</td>
+              <td className="px-4 py-3"><Badge label={inv.plan} color={inv.plan==="Enterprise"?C.harvest:inv.plan==="Growth"?C.field:C.slate} /></td>
+              <td className="px-4 py-3 text-xs font-mono font-bold" style={{ color:C.ink }}>{inv.amount===0?"—":`KES ${inv.amount.toLocaleString()}`}</td>
+              <td className="px-4 py-3"><Badge label={inv.status} color={inv.status==="Paid"?C.shoot:inv.status==="Pending"?C.amber:inv.status==="Failed"?C.crimson:C.slate} /></td>
+              <td className="px-4 py-3 text-xs" style={{ color:C.slate }}>{inv.date}</td>
+            </tr>
+          ))}</tbody>
+        </table>
+      </Card>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MODULE 8 — WEATHER & FIELDS
+// ═══════════════════════════════════════════════════════════════════════════════
+const WEATHER_COUNTIES = [
+  { county:"Kiambu",      temp:22, condition:"Partly Cloudy", icon:"⛅", rain:35, humidity:68, wind:12, advisory:"Ideal for spraying" },
+  { county:"Meru",        temp:20, condition:"Light Rain",    icon:"🌦️", rain:78, humidity:84, wind:8,  advisory:"Delay harvest 2 days" },
+  { county:"Murang'a",    temp:21, condition:"Cloudy",        icon:"☁️", rain:55, humidity:75, wind:10, advisory:"Monitor leaf moisture" },
+  { county:"Makueni",     temp:28, condition:"Sunny",         icon:"☀️", rain:8,  humidity:42, wind:14, advisory:"High evapotranspiration" },
+  { county:"Nakuru",      temp:19, condition:"Overcast",      icon:"☁️", rain:42, humidity:71, wind:11, advisory:"Watch for armyworm" },
+  { county:"Kisumu",      temp:26, condition:"Thunderstorm",  icon:"⛈️", rain:88, humidity:89, wind:18, advisory:"Postpone field activities" },
+];
+const FORECAST_7D = [
+  { d:"Mon", high:23, low:14, rain:35 },{ d:"Tue", high:24, low:15, rain:20 },
+  { d:"Wed", high:22, low:14, rain:60 },{ d:"Thu", high:21, low:13, rain:75 },
+  { d:"Fri", high:23, low:14, rain:40 },{ d:"Sat", high:25, low:15, rain:15 },
+  { d:"Sun", high:26, low:16, rain:10 },
+];
+
+function WeatherFields() {
+  const [selected, setSelected] = useState(WEATHER_COUNTIES[0]);
+  return (
+    <div>
+      <SectionTitle sub="7-day forecast · County advisories · Plot-level conditions · Spray windows">
+        🌤️ Weather &amp; Fields
+      </SectionTitle>
+
+      <div className="grid grid-cols-3 gap-5 mb-5">
+        <Card className="col-span-2 p-5" style={{ background:`linear-gradient(135deg,${C.sky}10,${C.field}05)` }}>
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider" style={{ color:C.slate }}>Now · {selected.county}</p>
+              <div className="flex items-center gap-3 mt-1">
+                <span className="text-5xl">{selected.icon}</span>
+                <div>
+                  <p className="text-4xl font-black" style={{ color:C.ink, fontFamily:"'Barlow Condensed',sans-serif" }}>{selected.temp}°C</p>
+                  <p className="text-sm font-bold" style={{ color:C.slate }}>{selected.condition}</p>
+                </div>
+              </div>
+            </div>
+            <div className="text-right">
+              <Badge label={selected.advisory} color={C.field} />
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            {[["💧 Rain prob",`${selected.rain}%`,C.sky],["💨 Humidity",`${selected.humidity}%`,C.field],["🌬️ Wind",`${selected.wind} km/h`,C.violet]].map(([l,v,c])=>(
+              <div key={l} className="p-3 rounded-xl" style={{ background:"#fff", border:`1px solid ${C.border}` }}>
+                <p className="text-xs" style={{ color:C.slate }}>{l}</p>
+                <p className="text-lg font-black" style={{ color:c, fontFamily:"'Barlow Condensed',sans-serif" }}>{v}</p>
+              </div>
+            ))}
+          </div>
+        </Card>
+        <Card className="p-4">
+          <p className="text-xs font-black uppercase tracking-wider mb-3" style={{ color:C.slate }}>County Advisories</p>
+          <div className="space-y-1.5 max-h-72 overflow-y-auto">
+            {WEATHER_COUNTIES.map(w=>(
+              <button key={w.county} onClick={()=>setSelected(w)} className="w-full flex items-center gap-2.5 p-2 rounded-lg text-left"
+                style={{ background:selected.county===w.county?`${C.field}10`:"transparent", border:`1px solid ${selected.county===w.county?C.field:"transparent"}` }}>
+                <span className="text-xl">{w.icon}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold" style={{ color:C.ink }}>{w.county}</p>
+                  <p className="text-xs truncate" style={{ color:C.slate }}>{w.condition}</p>
+                </div>
+                <span className="text-sm font-black" style={{ color:C.ink, fontFamily:"'Barlow Condensed',sans-serif" }}>{w.temp}°</span>
+              </button>
+            ))}
+          </div>
+        </Card>
+      </div>
+
+      <Card className="p-5 mb-5">
+        <p className="text-xs font-black uppercase tracking-wider mb-3" style={{ color:C.slate }}>7-Day Forecast · {selected.county}</p>
+        <div className="grid grid-cols-7 gap-3">
+          {FORECAST_7D.map(d=>(
+            <div key={d.d} className="text-center p-3 rounded-xl" style={{ background:C.mist, border:`1px solid ${C.border}` }}>
+              <p className="text-xs font-bold" style={{ color:C.slate }}>{d.d}</p>
+              <p className="text-2xl my-1">{d.rain>60?"🌧️":d.rain>30?"⛅":"☀️"}</p>
+              <p className="text-xs font-black" style={{ color:C.ink }}>{d.high}°</p>
+              <p className="text-xs" style={{ color:C.slate }}>{d.low}°</p>
+              <div className="mt-1.5 text-xs font-bold" style={{ color:d.rain>60?C.sky:d.rain>30?C.amber:C.shoot }}>{d.rain}%</div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Card className="p-5">
+        <p className="text-xs font-black uppercase tracking-wider mb-3" style={{ color:C.slate }}>Rainfall Probability · 7-day</p>
+        <ResponsiveContainer width="100%" height={180}>
+          <BarChart data={FORECAST_7D}>
+            <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
+            <XAxis dataKey="d" tick={{ fontSize:11, fill:C.slate }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize:11, fill:C.slate }} axisLine={false} tickLine={false} />
+            <Tooltip contentStyle={{ borderRadius:10, border:"none", fontSize:12 }} />
+            <Bar dataKey="rain" radius={[8,8,0,0]}>
+              {FORECAST_7D.map((d,i)=>(<Cell key={i} fill={d.rain>60?C.sky:d.rain>30?C.amber:C.shoot} />))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </Card>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MODULE 9 — SUPPLIER & RBAC
+// ═══════════════════════════════════════════════════════════════════════════════
+const SUPPLIERS = [
+  { id:"S001", name:"Kathiani Horticultural SHG", type:"Self-Help Group", county:"Machakos",  staff:41,  certs:1, status:"Active",  contact:"312 Machakos · Cert #3897042", featured:true },
+  { id:"S002", name:"Murang'a Avocado Pressers",  type:"Processor",  county:"Murang'a",  staff:42,  certs:3, status:"Active",  contact:"j.kimani@muranga-press.co.ke" },
+  { id:"S003", name:"Kilifi Coconut Processors",   type:"Processor",  county:"Kilifi",    staff:28,  certs:2, status:"Active",  contact:"ops@kilificoco.ke" },
+  { id:"S004", name:"Nyeri Highlands Coffee",     type:"Mill",        county:"Nyeri",     staff:55,  certs:4, status:"Active",  contact:"mill@nyerihighlands.co.ke" },
+  { id:"S005", name:"Lake Vic Fish Fillets",      type:"Cold Chain",  county:"Homa Bay",  staff:18,  certs:1, status:"Suspended", contact:"info@lakevicfish.ke" },
+  { id:"S006", name:"Kericho Purple Tea",         type:"Factory",     county:"Kericho",   staff:120, certs:5, status:"Active",  contact:"factory@kerichoptea.ke" },
+  { id:"S007", name:"Isiolo Moringa Co-op",       type:"Co-operative",county:"Isiolo",    staff:34,  certs:2, status:"Active",  contact:"isiolo.moringa@coop.ke" },
+];
+const ROLES = [
+  { role:"Platform Admin",   users:3,  perms:["All modules","Billing","User mgmt","API keys","Settings"] },
+  { role:"Org Manager",      users:18, perms:["All modules","User mgmt","Reports","Org settings"] },
+  { role:"Agronomist",       users:42, perms:["Farmer registry","Weather & Fields","Compliance","Reports"] },
+  { role:"Supplier",         users:64, perms:["Marketplace","Compliance","Trace records","Own profile"] },
+  { role:"Farmer",           users:524,perms:["Own profile","Marketplace browse","Training","Weather"] },
+];
+const RBAC_MATRIX = [
+  { module:"Marketplace",    admin:"✓", manager:"✓", agronomist:"View", supplier:"✓",   farmer:"View" },
+  { module:"Farmer Registry",admin:"✓", manager:"✓", agronomist:"✓",     supplier:"—",  farmer:"Own" },
+  { module:"Compliance",     admin:"✓", manager:"✓", agronomist:"View", supplier:"Own", farmer:"—" },
+  { module:"Weather",        admin:"✓", manager:"✓", agronomist:"✓",     supplier:"View", farmer:"View" },
+  { module:"Billing",        admin:"✓", manager:"View",agronomist:"—",   supplier:"—",  farmer:"—" },
+  { module:"API Keys",       admin:"✓", manager:"—", agronomist:"—",     supplier:"—",  farmer:"—" },
+];
+
+function SupplierRBAC() {
+  const [tab, setTab] = useState("suppliers");
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <SectionTitle sub="Supplier directory · Onboarding pipeline · Role-based access matrix">
+          🏭 Supplier &amp; RBAC
+        </SectionTitle>
+        <div className="flex gap-1 p-1 rounded-xl" style={{ background:C.mist, border:`1px solid ${C.border}` }}>
+          {[["suppliers","🏭 Suppliers"],["roles","🔐 Roles"],["matrix","🧩 Permission Matrix"]].map(([id,l])=>(
+            <button key={id} onClick={()=>setTab(id)} className="px-3 py-1.5 rounded-lg text-xs font-bold"
+              style={{ background:tab===id?"#fff":"transparent", color:tab===id?C.ink:C.slate, boxShadow:tab===id?"0 1px 3px rgba(0,0,0,.1)":"none" }}>{l}</button>
+          ))}
+        </div>
+      </div>
+
+      {tab==="suppliers" && (
+        <>
+          <div className="grid grid-cols-4 gap-4 mb-5">
+            <KpiCard icon="🏭" label="Suppliers" value={SUPPLIERS.length} sub="enrolled organisations" color={C.field} />
+            <KpiCard icon="👷" label="Total Staff" value={SUPPLIERS.reduce((s,x)=>s+x.staff,0)} sub="across all suppliers" color={C.sky} />
+            <KpiCard icon="📜" label="Avg Certs" value={(SUPPLIERS.reduce((s,x)=>s+x.certs,0)/SUPPLIERS.length).toFixed(1)} sub="per supplier" color={C.harvest} />
+            <KpiCard icon="⚠️" label="Suspended" value={SUPPLIERS.filter(s=>s.status==="Suspended").length} sub="require review" color={C.crimson} />
+          </div>
+          <Card className="overflow-hidden">
+            <table className="w-full text-sm">
+              <thead><tr style={{ background:C.mist }}>
+                {["ID","Supplier","Type","County","Staff","Certs","Status","Contact"].map(h=>(
+                  <th key={h} className="px-4 py-2.5 text-left text-xs font-black uppercase tracking-wider" style={{ color:C.slate }}>{h}</th>
+                ))}
+              </tr></thead>
+              <tbody>{SUPPLIERS.map((s,i)=>(
+                <tr key={s.id} style={{ borderBottom:`1px solid ${C.border}`, background:s.featured?`${C.field}08`:i%2===0?"#fff":"#FAFAF8" }}>
+                  <td className="px-4 py-3 font-mono text-xs" style={{ color:C.slate }}>{s.id}</td>
+                  <td className="px-4 py-3 text-xs font-bold" style={{ color:C.ink }}>
+                    {s.featured && <span title="Real-world co-operative" style={{ marginRight:6 }}>⭐</span>}
+                    {s.name}
+                  </td>
+                  <td className="px-4 py-3"><Badge label={s.type} color={s.type==="Self-Help Group"?C.field:C.violet} /></td>
+                  <td className="px-4 py-3 text-xs" style={{ color:C.slate }}>{s.county}</td>
+                  <td className="px-4 py-3 text-xs font-mono font-bold">{s.staff}</td>
+                  <td className="px-4 py-3 text-xs font-mono font-bold" style={{ color:C.harvest }}>{s.certs}</td>
+                  <td className="px-4 py-3"><Badge label={s.status} color={s.status==="Active"?C.shoot:C.crimson} /></td>
+                  <td className="px-4 py-3 text-xs font-mono" style={{ color:C.slate }}>{s.contact}</td>
+                </tr>
+              ))}</tbody>
+            </table>
+          </Card>
+        </>
+      )}
+
+      {tab==="roles" && (
+        <div className="grid grid-cols-2 gap-4">
+          {ROLES.map(r=>(
+            <Card key={r.role} className="p-5">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-base font-black" style={{ color:C.ink, fontFamily:"'Barlow Condensed',sans-serif" }}>{r.role}</p>
+                <Badge label={`${r.users} users`} color={C.field} />
+              </div>
+              <p className="text-xs font-bold mb-2" style={{ color:C.slate }}>Permissions</p>
+              <div className="flex flex-wrap gap-1.5">
+                {r.perms.map(p=>(<Badge key={p} label={p} color={C.sky} />))}
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {tab==="matrix" && (
+        <Card className="overflow-hidden">
+          <table className="w-full text-sm">
+            <thead><tr style={{ background:C.grove }}>
+              {["Module","Platform Admin","Org Manager","Agronomist","Supplier","Farmer"].map(h=>(
+                <th key={h} className="px-4 py-2.5 text-left text-xs font-black uppercase tracking-wider" style={{ color:C.lime }}>{h}</th>
+              ))}
+            </tr></thead>
+            <tbody>{RBAC_MATRIX.map((r,i)=>(
+              <tr key={r.module} style={{ borderBottom:`1px solid ${C.border}`, background:i%2===0?"#fff":"#FAFAF8" }}>
+                <td className="px-4 py-3 text-xs font-bold" style={{ color:C.ink }}>{r.module}</td>
+                {["admin","manager","agronomist","supplier","farmer"].map(role=>(
+                  <td key={role} className="px-4 py-3 text-xs font-mono font-bold" style={{ color:r[role]==="✓"?C.shoot:r[role]==="—"?C.crimson:C.slate }}>{r[role]}</td>
+                ))}
+              </tr>
+            ))}</tbody>
+          </table>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MODULE 10 — ANALYTICS & SDG M&E
+// ═══════════════════════════════════════════════════════════════════════════════
+const SDG_GOALS = [
+  { id:1,  code:"SDG 1",  title:"No Poverty",            icon:"💵", color:"#E5243B", metric:"Avg farmer income +",  value:"+34%", target:"+50%", progress:68 },
+  { id:2,  code:"SDG 2",  title:"Zero Hunger",            icon:"🌾", color:"#DDA63A", metric:"Yield improvement",     value:"+22%", target:"+30%", progress:73 },
+  { id:5,  code:"SDG 5",  title:"Gender Equality",        icon:"⚖️", color:"#FF3A21", metric:"Women farmers",          value:"42%",  target:"50%",  progress:84 },
+  { id:8,  code:"SDG 8",  title:"Decent Work & Growth",   icon:"📈", color:"#A21942", metric:"Co-op jobs created",    value:"1,240",target:"2,000",progress:62 },
+  { id:12, code:"SDG 12", title:"Responsible Consumption",icon:"♻️", color:"#BF8B2E", metric:"Certified produce",      value:"58%",  target:"75%",  progress:77 },
+  { id:13, code:"SDG 13", title:"Climate Action",         icon:"🌍", color:"#3F7E44", metric:"CO₂ reduction",          value:"-18%", target:"-25%", progress:72 },
+  { id:17, code:"SDG 17", title:"Partnerships",           icon:"🤝", color:"#19486A", metric:"Active partner orgs",   value:"104",  target:"150",  progress:69 },
+];
+const ANALYTICS_COUNTIES = [
+  { name:"Kiambu",  farmers:89, gmv:2840 },{ name:"Meru",    farmers:62, gmv:1980 },
+  { name:"Nakuru",  farmers:48, gmv:1420 },{ name:"Makueni", farmers:41, gmv:980  },
+  { name:"Kisumu",  farmers:38, gmv:760  },{ name:"Murang'a",farmers:35, gmv:920  },
+];
+
+function AnalyticsSDG() {
+  const [view, setView] = useState("sdg");
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <SectionTitle sub="UN Sustainable Development Goals · Platform analytics · Impact metrics">
+          📊 Analytics &amp; SDG M&amp;E
+        </SectionTitle>
+        <div className="flex gap-1 p-1 rounded-xl" style={{ background:C.mist, border:`1px solid ${C.border}` }}>
+          {[["sdg","🌍 SDG Tracker"],["analytics","📊 Platform Analytics"]].map(([id,l])=>(
+            <button key={id} onClick={()=>setView(id)} className="px-3 py-1.5 rounded-lg text-xs font-bold"
+              style={{ background:view===id?"#fff":"transparent", color:view===id?C.ink:C.slate, boxShadow:view===id?"0 1px 3px rgba(0,0,0,.1)":"none" }}>{l}</button>
+          ))}
+        </div>
+      </div>
+
+      {view==="sdg" && (
+        <>
+          <div className="grid grid-cols-4 gap-4 mb-5">
+            <KpiCard icon="🌍" label="SDGs Tracked" value={SDG_GOALS.length} sub="of 17 UN goals" color={C.field} />
+            <KpiCard icon="📊" label="Avg Progress" value={`${Math.round(SDG_GOALS.reduce((s,g)=>s+g.progress,0)/SDG_GOALS.length)}%`} sub="across all goals" color={C.shoot} />
+            <KpiCard icon="✅" label="On-track" value={SDG_GOALS.filter(g=>g.progress>=70).length} sub="≥70% to target" color={C.harvest} />
+            <KpiCard icon="📅" label="Reporting Period" value="Q1 2026" sub="Jan – Mar" color={C.violet} />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            {SDG_GOALS.map(g=>(
+              <Card key={g.id} className="p-5">
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center text-xl" style={{ background:`${g.color}20`, color:g.color }}>{g.icon}</div>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold uppercase tracking-wider" style={{ color:g.color }}>{g.code}</p>
+                    <p className="text-base font-black" style={{ color:C.ink }}>{g.title}</p>
+                  </div>
+                  <Badge label={g.progress>=70?"On-track":"Behind"} color={g.progress>=70?C.shoot:C.amber} />
+                </div>
+                <div className="space-y-1 mb-2">
+                  <div className="flex justify-between text-xs"><span style={{ color:C.slate }}>{g.metric}</span><span className="font-bold" style={{ color:C.ink }}>{g.value} / {g.target}</span></div>
+                  <div className="h-2 rounded-full" style={{ background:C.border }}>
+                    <div className="h-full rounded-full" style={{ width:`${g.progress}%`, background:g.color }} />
+                  </div>
+                  <p className="text-xs font-bold text-right" style={{ color:g.color }}>{g.progress}% to target</p>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </>
+      )}
+
+      {view==="analytics" && (
+        <div className="grid grid-cols-2 gap-5">
+          <Card className="p-5">
+            <p className="text-xs font-black uppercase tracking-wider mb-3" style={{ color:C.slate }}>Farmers by County</p>
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart data={ANALYTICS_COUNTIES} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
+                <XAxis type="number" tick={{ fontSize:11, fill:C.slate }} axisLine={false} tickLine={false} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize:11, fill:C.slate }} axisLine={false} tickLine={false} width={70} />
+                <Tooltip contentStyle={{ borderRadius:10, border:"none", fontSize:12 }} />
+                <Bar dataKey="farmers" fill={C.field} radius={[0,8,8,0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </Card>
+          <Card className="p-5">
+            <p className="text-xs font-black uppercase tracking-wider mb-3" style={{ color:C.slate }}>GMV by County · KES K</p>
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart data={ANALYTICS_COUNTIES} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
+                <XAxis type="number" tick={{ fontSize:11, fill:C.slate }} axisLine={false} tickLine={false} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize:11, fill:C.slate }} axisLine={false} tickLine={false} width={70} />
+                <Tooltip contentStyle={{ borderRadius:10, border:"none", fontSize:12 }} />
+                <Bar dataKey="gmv" fill={C.harvest} radius={[0,8,8,0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MODULE 11 — COMMUNICATIONS HUB
+// ═══════════════════════════════════════════════════════════════════════════════
+const THREADS = [
+  { id:"T001", from:"Grace Wanjiku",   role:"Farmer",  county:"Kiambu",   subject:"Avocado harvest ready — 1.2T",  preview:"Hi team, my avocado is ready for collection. Please send transport…", time:"12 min ago", unread:true,  channel:"SMS" },
+  { id:"T002", from:"Hamburg Traders", role:"Buyer",   county:"Germany",  subject:"PO confirmation for Coffee AA",  preview:"Confirming purchase of 2,400kg at agreed FOB rate of USD 4.20/kg…",  time:"1 hr ago",   unread:true,  channel:"Email" },
+  { id:"T003", from:"James Mwangi",     role:"Farmer",  county:"Meru",     subject:"Question about KEPHIS renewal",  preview:"Good morning. Could you advise on the documents needed for renewing…",time:"3 hrs ago",  unread:false, channel:"WhatsApp" },
+  { id:"T004", from:"Esther Njoroge",   role:"Farmer",  county:"Murang'a", subject:"Macadamia certification cost",   preview:"Hello, I would like to understand the cost breakdown for Fairtrade…",  time:"6 hrs ago",  unread:false, channel:"SMS" },
+  { id:"T005", from:"Tesco UK",         role:"Buyer",   county:"UK",       subject:"Spec sheet — French Beans AA",   preview:"Please share the latest spec sheet and any new certification updates…", time:"1 day ago",  unread:false, channel:"Email" },
+];
+const BROADCAST_HISTORY = [
+  { id:"BC-041", date:"Apr 28", title:"Heavy rain advisory · 5 counties",    audience:"Farmers in Kisumu, Homa Bay, Migori, Siaya, Busia", reach:184, channel:"SMS" },
+  { id:"BC-040", date:"Apr 25", title:"FOB price update · Coffee AA +2%",     audience:"All Coffee farmers + Co-op managers",                reach:96,  channel:"SMS" },
+  { id:"BC-039", date:"Apr 22", title:"New ISO 22000 training module live",   audience:"All Enterprise plan organisations",                  reach:42,  channel:"Email" },
+];
+
+function CommunicationsHub() {
+  const [tab, setTab] = useState("inbox");
+  const [selected, setSelected] = useState(THREADS[0]);
+  const [draft, setDraft] = useState("");
+  const unread = THREADS.filter(t=>t.unread).length;
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <SectionTitle sub="Two-way SMS · WhatsApp · Email · Broadcast tools · Notification log">
+          💬 Communications Hub
+        </SectionTitle>
+        <div className="flex gap-1 p-1 rounded-xl" style={{ background:C.mist, border:`1px solid ${C.border}` }}>
+          {[["inbox",`📥 Inbox · ${unread}`],["broadcast","📣 Broadcast"],["history","🗂️ History"]].map(([id,l])=>(
+            <button key={id} onClick={()=>setTab(id)} className="px-3 py-1.5 rounded-lg text-xs font-bold"
+              style={{ background:tab===id?"#fff":"transparent", color:tab===id?C.ink:C.slate, boxShadow:tab===id?"0 1px 3px rgba(0,0,0,.1)":"none" }}>{l}</button>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-4 gap-4 mb-5">
+        <KpiCard icon="📥" label="Unread"          value={unread}                   sub={`of ${THREADS.length} active threads`} color={C.crimson} />
+        <KpiCard icon="📤" label="Sent · Today"    value="24"                       sub="across all channels"                    color={C.field} />
+        <KpiCard icon="📡" label="SMS Credits"     value="1,840"                    sub="≈ 920 broadcasts left"                  color={C.sky} />
+        <KpiCard icon="✅" label="Delivery Rate"    value="98.4%"                    sub="last 7 days"                            color={C.shoot} />
+      </div>
+
+      {tab==="inbox" && (
+        <div className="grid grid-cols-3 gap-5">
+          <Card className="overflow-hidden">
+            {THREADS.map(t=>(
+              <div key={t.id} onClick={()=>setSelected(t)} className="p-3.5 cursor-pointer"
+                style={{ borderBottom:`1px solid ${C.border}`, background:selected?.id===t.id?`${C.field}10`:t.unread?C.mist:"#fff" }}>
+                <div className="flex items-start justify-between mb-1">
+                  <p className="text-xs font-black" style={{ color:C.ink }}>{t.from}</p>
+                  <span className="text-xs" style={{ color:C.slate }}>{t.time}</span>
+                </div>
+                <p className="text-xs font-bold mb-1" style={{ color:C.ink }}>{t.subject}</p>
+                <p className="text-xs truncate" style={{ color:C.slate }}>{t.preview}</p>
+                <div className="flex gap-1.5 mt-2">
+                  <Badge label={t.role} color={t.role==="Farmer"?C.field:C.sky} />
+                  <Badge label={t.channel} color={t.channel==="SMS"?C.harvest:t.channel==="Email"?C.violet:C.shoot} />
+                  {t.unread && <Badge label="New" color={C.crimson} />}
+                </div>
+              </div>
+            ))}
+          </Card>
+
+          <Card className="col-span-2 p-5 flex flex-col" style={{ minHeight:480 }}>
+            {selected ? (
+              <>
+                <div className="flex items-center justify-between mb-4 pb-3" style={{ borderBottom:`1px solid ${C.border}` }}>
+                  <div>
+                    <p className="text-base font-black" style={{ color:C.ink }}>{selected.subject}</p>
+                    <p className="text-xs" style={{ color:C.slate }}>From {selected.from} · {selected.county} · via {selected.channel}</p>
+                  </div>
+                  <Badge label={selected.channel} color={selected.channel==="SMS"?C.harvest:selected.channel==="Email"?C.violet:C.shoot} />
+                </div>
+                <div className="flex-1 mb-4">
+                  <p className="text-sm" style={{ color:C.ink, lineHeight:1.6 }}>{selected.preview} ...</p>
+                </div>
+                <div>
+                  <textarea value={draft} onChange={e=>setDraft(e.target.value)} placeholder="Type your reply…" rows={3}
+                    className="w-full border rounded-xl px-3 py-2 text-sm focus:outline-none resize-none" style={{ borderColor:C.border, background:C.mist }} />
+                  <div className="flex gap-2 mt-2">
+                    <button className="px-4 py-2 rounded-xl text-xs font-bold text-white" style={{ background:C.field }}>Send via {selected.channel}</button>
+                    <button onClick={()=>setDraft("")} className="px-4 py-2 rounded-xl text-xs font-bold" style={{ background:C.mist, color:C.slate, border:`1px solid ${C.border}` }}>Discard</button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <p className="text-sm" style={{ color:C.slate }}>Select a thread</p>
+            )}
+          </Card>
+        </div>
+      )}
+
+      {tab==="broadcast" && (
+        <Card className="p-6 max-w-3xl">
+          <p className="text-base font-black mb-1" style={{ color:C.ink }}>New Broadcast</p>
+          <p className="text-xs mb-5" style={{ color:C.slate }}>Send to thousands of farmers in one tap · SMS credits deducted on send</p>
+          <div className="space-y-4">
+            <div>
+              <label className="text-xs font-bold mb-1 block" style={{ color:C.slate }}>Audience</label>
+              <select className="w-full border rounded-lg px-3 py-2 text-sm" style={{ borderColor:C.border }}>
+                <option>All farmers (524)</option>
+                <option>By county — Kiambu (89)</option>
+                <option>By crop — Coffee farmers (98)</option>
+                <option>By co-op — Tigoni Growers Ltd (24)</option>
+                <option>Verified farmers only (412)</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-bold mb-1 block" style={{ color:C.slate }}>Channel</label>
+              <div className="flex gap-2">
+                {["SMS","WhatsApp","Email"].map(c=>(
+                  <label key={c} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border cursor-pointer" style={{ borderColor:C.border, background:C.mist }}>
+                    <input type="checkbox" defaultChecked={c==="SMS"} /><span className="text-xs font-bold">{c}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-bold mb-1 block" style={{ color:C.slate }}>Message · {160} chars max for SMS</label>
+              <textarea rows={4} placeholder="Heavy rain advisory for Kisumu county. Postpone field activities until Tue. Reply HELP for guidance."
+                className="w-full border rounded-xl px-3 py-2 text-sm focus:outline-none resize-none" style={{ borderColor:C.border, background:C.mist }} />
+            </div>
+            <div className="flex justify-between items-center pt-3" style={{ borderTop:`1px solid ${C.border}` }}>
+              <p className="text-xs" style={{ color:C.slate }}>Estimated cost: <span className="font-bold" style={{ color:C.ink }}>184 credits</span></p>
+              <button className="px-5 py-2 rounded-xl text-sm font-bold text-white" style={{ background:C.field }}>Send Broadcast →</button>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {tab==="history" && (
+        <Card className="overflow-hidden">
+          <table className="w-full text-sm">
+            <thead><tr style={{ background:C.mist }}>
+              {["ID","Date","Title","Audience","Reach","Channel"].map(h=>(
+                <th key={h} className="px-4 py-2.5 text-left text-xs font-black uppercase tracking-wider" style={{ color:C.slate }}>{h}</th>
+              ))}
+            </tr></thead>
+            <tbody>{BROADCAST_HISTORY.map((b,i)=>(
+              <tr key={b.id} style={{ borderBottom:`1px solid ${C.border}`, background:i%2===0?"#fff":"#FAFAF8" }}>
+                <td className="px-4 py-3 font-mono text-xs" style={{ color:C.slate }}>{b.id}</td>
+                <td className="px-4 py-3 text-xs" style={{ color:C.slate }}>{b.date}</td>
+                <td className="px-4 py-3 text-xs font-bold" style={{ color:C.ink }}>{b.title}</td>
+                <td className="px-4 py-3 text-xs" style={{ color:C.slate }}>{b.audience}</td>
+                <td className="px-4 py-3 text-xs font-mono font-bold" style={{ color:C.field }}>{b.reach}</td>
+                <td className="px-4 py-3"><Badge label={b.channel} color={b.channel==="SMS"?C.harvest:C.violet} /></td>
+              </tr>
+            ))}</tbody>
+          </table>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MODULE 12 — FLUTTER MOBILE APP
+// ═══════════════════════════════════════════════════════════════════════════════
+const APP_DEVICES = [
+  { os:"Android", version:"v2.4.1", users:412, crash:0.2,  rating:4.6 },
+  { os:"iOS",     version:"v2.4.1", users:42,  crash:0.1,  rating:4.8 },
+  { os:"USSD",    version:"*483*1#",users:184, crash:0.0,  rating:4.4 },
+];
+const APP_FEATURES = [
+  { icon:"📡", title:"Offline-first sync",         body:"Works in zero-bar areas · auto-syncs when reconnected" },
+  { icon:"📞", title:"USSD fallback",                body:"Feature phones supported via *483*1# Safaricom shortcode" },
+  { icon:"🌍", title:"Multilingual",                  body:"English · Swahili · Kalenjin · Luo · Kikuyu · Kamba" },
+  { icon:"📷", title:"Camera-based plot capture",    body:"GPS + photo for plot verification & yield evidence" },
+  { icon:"💳", title:"M-Pesa STK push",              body:"One-tap payment for inputs, training, certifications" },
+  { icon:"🔔", title:"Smart notifications",          body:"Weather alerts · price moves · cert renewals" },
+];
+
+function FlutterMobileApp() {
+  const totalUsers = APP_DEVICES.reduce((s,d)=>s+d.users,0);
+  return (
+    <div>
+      <SectionTitle sub="Cross-platform farmer app · Android · iOS · USSD · Offline-first">
+        📱 Flutter Mobile App
+      </SectionTitle>
+
+      <div className="grid grid-cols-4 gap-4 mb-5">
+        <KpiCard icon="📲" label="Active Devices" value={totalUsers}    sub="across 3 platforms" color={C.field} />
+        <KpiCard icon="⭐" label="Avg Rating"     value="4.6"           sub="last 30 days · 2,184 reviews" color={C.harvest} />
+        <KpiCard icon="🛡️" label="Crash-free"     value="99.8%"         sub="Sentry monitoring"   color={C.shoot} />
+        <KpiCard icon="🚀" label="Latest Build"   value="v2.4.1"        sub="released Apr 26, 2026" color={C.violet} />
+      </div>
+
+      <div className="grid grid-cols-3 gap-5">
+        {/* Phone preview */}
+        <Card className="p-6 flex items-center justify-center" style={{ background:`linear-gradient(135deg,${C.grove},${C.field})` }}>
+          <div style={{ width:220, height:440, borderRadius:32, background:"#fff", border:"8px solid #0C1A0E", padding:14, display:"flex", flexDirection:"column", boxShadow:"0 18px 40px rgba(0,0,0,0.3)" }}>
+            <div className="flex items-center justify-between" style={{ fontSize:9, color:C.slate, marginBottom:8 }}>
+              <span>9:41</span><span>📶 5G · 🔋 84%</span>
+            </div>
+            <div className="flex items-center gap-2 mb-3">
+              <XGrowMark size={28} rx={7} />
+              <div>
+                <p style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:13, color:C.grove }}>Grow</p>
+                <p style={{ fontSize:7, fontWeight:700, letterSpacing:"0.14em", color:C.field }}>BY XCADO</p>
+              </div>
+            </div>
+            <div style={{ background:`${C.field}10`, border:`1px solid ${C.field}30`, borderRadius:10, padding:10, marginBottom:8 }}>
+              <p style={{ fontSize:10, fontWeight:800, color:C.grove }}>Hi Grace 👋</p>
+              <p style={{ fontSize:8, color:C.slate }}>Avocado FOB +2% today</p>
+            </div>
+            <div style={{ background:C.mist, borderRadius:10, padding:10, marginBottom:8 }}>
+              <p style={{ fontSize:9, fontWeight:700, color:C.ink, marginBottom:4 }}>📦 Active Listings · 3</p>
+              <p style={{ fontSize:8, color:C.slate }}>1.2T Avocado · 800kg Tea</p>
+            </div>
+            <div style={{ background:C.mist, borderRadius:10, padding:10, marginBottom:8 }}>
+              <p style={{ fontSize:9, fontWeight:700, color:C.ink, marginBottom:4 }}>🌤️ Kiambu · 22°C</p>
+              <p style={{ fontSize:8, color:C.slate }}>Ideal for spraying today</p>
+            </div>
+            <div style={{ background:`${C.harvest}15`, border:`1px solid ${C.harvest}30`, borderRadius:10, padding:10, marginBottom:8 }}>
+              <p style={{ fontSize:9, fontWeight:700, color:C.ink }}>💳 KES 24K paid</p>
+              <p style={{ fontSize:8, color:C.slate }}>via M-Pesa · 5 hrs ago</p>
+            </div>
+            <div className="flex justify-around mt-auto pt-2" style={{ borderTop:`1px solid ${C.border}` }}>
+              {["🏠","🛒","🌱","💬","⚙️"].map((i,k)=>(<span key={k} style={{ fontSize:14, opacity:k===0?1:0.5 }}>{i}</span>))}
+            </div>
+          </div>
+        </Card>
+
+        <div className="col-span-2 space-y-5">
+          <Card className="p-5">
+            <p className="text-xs font-black uppercase tracking-wider mb-3" style={{ color:C.slate }}>Devices &amp; Versions</p>
+            <table className="w-full text-sm">
+              <thead><tr>{["Platform","Version","Users","Crash %","Rating"].map(h=>(
+                <th key={h} className="text-left text-xs font-bold uppercase tracking-wider py-2" style={{ color:C.slate }}>{h}</th>
+              ))}</tr></thead>
+              <tbody>{APP_DEVICES.map((d,i)=>(
+                <tr key={d.os} style={{ borderTop:`1px solid ${C.border}` }}>
+                  <td className="py-2 text-sm font-black" style={{ color:C.ink }}>{d.os==="Android"?"🤖":d.os==="iOS"?"🍎":"📞"} {d.os}</td>
+                  <td className="py-2 text-xs font-mono" style={{ color:C.slate }}>{d.version}</td>
+                  <td className="py-2 text-xs font-mono font-bold" style={{ color:C.field }}>{d.users}</td>
+                  <td className="py-2 text-xs font-mono" style={{ color:d.crash<0.5?C.shoot:C.crimson }}>{d.crash}%</td>
+                  <td className="py-2 text-xs font-bold" style={{ color:C.harvest }}>⭐ {d.rating}</td>
+                </tr>
+              ))}</tbody>
+            </table>
+          </Card>
+
+          <div className="grid grid-cols-2 gap-3">
+            {APP_FEATURES.map(f=>(
+              <Card key={f.title} className="p-4">
+                <div className="flex items-start gap-2.5">
+                  <span className="text-xl">{f.icon}</span>
+                  <div><p className="text-xs font-black" style={{ color:C.ink }}>{f.title}</p><p className="text-xs mt-0.5" style={{ color:C.slate }}>{f.body}</p></div>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          <Card className="p-5">
+            <p className="text-xs font-black uppercase tracking-wider mb-3" style={{ color:C.slate }}>Get the app</p>
+            <div className="flex gap-3">
+              <button className="flex-1 px-4 py-3 rounded-xl text-xs font-bold text-white flex items-center gap-2 justify-center" style={{ background:"#0C1A0E" }}>
+                <span className="text-base">🤖</span><span>Google Play</span>
+              </button>
+              <button className="flex-1 px-4 py-3 rounded-xl text-xs font-bold text-white flex items-center gap-2 justify-center" style={{ background:"#0C1A0E" }}>
+                <span className="text-base">🍎</span><span>App Store</span>
+              </button>
+              <button className="flex-1 px-4 py-3 rounded-xl text-xs font-bold flex items-center gap-2 justify-center" style={{ background:`${C.harvest}15`, color:C.harvest, border:`1px solid ${C.harvest}30` }}>
+                <span className="text-base">📞</span><span>Dial *483*1#</span>
+              </button>
+            </div>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // NAV + APP SHELL
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // ── NAV ───────────────────────────────────────────────────────────────────────
 const NAV = [
-  { id:"marketplace", icon:"🛒", label:"Marketplace",        tag:"New" },
+  { id:"marketplace",  icon:"🛒", label:"Marketplace",        tag:"New" },
   { id:"supplychain",  icon:"🚚", label:"Supply Chain",       tag:"New" },
   { id:"compliance",   icon:"✅", label:"Compliance & Certs", tag:"New" },
   { id:"ai",           icon:"🤖", label:"AI Intelligence",    tag:"New" },
 ];
 
-const PREV_BUILT = [
-  ["👥","Farmer Registry + Signup"],
-  ["📈","Trade Assessment"],
-  ["💎","SaaS Subscriptions"],
-  ["🌤️","Weather & Fields"],
-  ["🏭","Supplier & RBAC"],
-  ["📊","Analytics & SDG M&E"],
-  ["💬","Communications Hub"],
-  ["📱","Flutter Mobile App"],
+const NAV_PREV = [
+  { id:"farmers",     icon:"👥", label:"Farmer Registry + Signup" },
+  { id:"trade",       icon:"📈", label:"Trade Assessment" },
+  { id:"saas",        icon:"💎", label:"SaaS Subscriptions" },
+  { id:"weather",     icon:"🌤️", label:"Weather & Fields" },
+  { id:"supplier",    icon:"🏭", label:"Supplier & RBAC" },
+  { id:"analytics",   icon:"📊", label:"Analytics & SDG M&E" },
+  { id:"comms",       icon:"💬", label:"Communications Hub" },
+  { id:"mobile",      icon:"📱", label:"Flutter Mobile App" },
 ];
 
 // ── APP ───────────────────────────────────────────────────────────────────────
@@ -1201,17 +2492,28 @@ export default function Sprint5() {
             );
           })}
 
-          {/* Previously built */}
+          {/* Previously built — now active */}
           <div style={{ marginTop:14, paddingTop:14, borderTop:"1px solid rgba(255,255,255,0.07)" }}>
             <p style={{ fontSize:9, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.1em",
-              padding:"0 10px 5px", color:"rgba(255,255,255,0.18)" }}>Previously Built</p>
-            {PREV_BUILT.map(([icon, label]) => (
-              <div key={label} style={{ display:"flex", alignItems:"center", gap:9, padding:"5px 10px",
-                fontSize:11, color:"rgba(245,241,232,0.2)" }}>
-                <span style={{ fontSize:12, opacity:0.4 }}>{icon}</span>
-                <span>{label}</span>
-              </div>
-            ))}
+              padding:"0 10px 5px", color:"rgba(255,255,255,0.32)" }}>Platform Modules</p>
+            {NAV_PREV.map(n => {
+              const active = page === n.id;
+              return (
+                <button key={n.id} onClick={() => setPage(n.id)} style={{
+                  width:"100%", display:"flex", alignItems:"center", gap:9, padding:"7px 10px",
+                  borderRadius:9, marginBottom:1, cursor:"pointer",
+                  background: active ? "rgba(157,217,106,0.12)" : "transparent",
+                  border: active ? `1px solid rgba(157,217,106,0.22)` : "1px solid transparent",
+                  borderLeft: active ? `3px solid ${C.lime}` : "3px solid transparent",
+                  color: active ? "#F5F1E8" : "rgba(245,241,232,0.55)",
+                  fontSize:12, fontWeight: active ? 600 : 500, textAlign:"left",
+                  transition:"all 0.14s",
+                }}>
+                  <span style={{ fontSize:13 }}>{n.icon}</span>
+                  <span style={{ flex:1 }}>{n.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -1251,7 +2553,7 @@ export default function Sprint5() {
               </span>
             </div>
             <span style={{ color:C.border, fontSize:16 }}>/</span>
-            <span style={{ fontWeight:700, color:C.ink, fontSize:13 }}>{NAV.find(n=>n.id===page)?.label}</span>
+            <span style={{ fontWeight:700, color:C.ink, fontSize:13 }}>{[...NAV, ...NAV_PREV].find(n=>n.id===page)?.label}</span>
           </div>
 
           {/* Right — tagline pill + badge + avatar */}
@@ -1283,6 +2585,14 @@ export default function Sprint5() {
             {page==="supplychain" && <SupplyChain />}
             {page==="compliance"  && <ComplianceCerts />}
             {page==="ai"          && <AIIntelligence />}
+            {page==="farmers"     && <FarmerRegistry />}
+            {page==="trade"       && <TradeAssessment />}
+            {page==="saas"        && <SaaSSubscriptions />}
+            {page==="weather"     && <WeatherFields />}
+            {page==="supplier"    && <SupplierRBAC />}
+            {page==="analytics"   && <AnalyticsSDG />}
+            {page==="comms"       && <CommunicationsHub />}
+            {page==="mobile"      && <FlutterMobileApp />}
           </div>
         </main>
       </div>
