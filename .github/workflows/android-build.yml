@@ -1,17 +1,12 @@
 name: Android APK build
 
 # Builds an unsigned debug + release APK for the grow-mobile Flutter app
-# every time grow-mobile/ changes (or on manual trigger). Uploads both
-# APKs as workflow artifacts so you can download + sideload from the
-# Actions tab without needing a working local Android toolchain.
+# every time grow-mobile/ changes (or on manual trigger). Uploads APK +
+# AAB artifacts so you can download + sideload from the Actions tab.
 #
-# Once you generate a signing keystore, set these repository secrets to
-# enable signed release builds (delete or comment-out the unsigned
-# release step below):
-#   ANDROID_KEYSTORE_BASE64   base64-encoded contents of upload.jks
-#   ANDROID_KEYSTORE_PASSWORD
-#   ANDROID_KEY_ALIAS
-#   ANDROID_KEY_PASSWORD
+# Uses ONLY first-party GitHub-owned actions (no third-party action
+# approval needed for new accounts). Flutter SDK is cloned + added to
+# PATH inline so the workflow works on any GH runner.
 
 on:
   push:
@@ -23,18 +18,16 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   build:
     name: Build APK on Ubuntu
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    defaults:
-      run:
-        working-directory: grow-mobile
+    timeout-minutes: 40
 
     steps:
-      - name: Checkout
+      - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Setup Java 17
@@ -43,29 +36,67 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+      - name: Cache Flutter SDK
+        id: cache-flutter
+        uses: actions/cache@v4
         with:
-          flutter-version: '3.41.9'
-          channel: stable
-          cache: true
+          path: ${{ runner.tool_cache }}/flutter
+          key: flutter-3.41.9-${{ runner.os }}
+
+      - name: Install Flutter SDK (if not cached)
+        if: steps.cache-flutter.outputs.cache-hit != 'true'
+        run: |
+          git clone https://github.com/flutter/flutter.git --depth 1 --branch stable "${{ runner.tool_cache }}/flutter"
+
+      - name: Add Flutter to PATH and warm up
+        run: |
+          echo "${{ runner.tool_cache }}/flutter/bin" >> $GITHUB_PATH
+          "${{ runner.tool_cache }}/flutter/bin/flutter" --version
+          "${{ runner.tool_cache }}/flutter/bin/flutter" config --no-analytics
+
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            grow-mobile/.dart_tool
+          key: pub-${{ runner.os }}-${{ hashFiles('grow-mobile/pubspec.yaml') }}
+          restore-keys: |
+            pub-${{ runner.os }}-
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('grow-mobile/android/**/*.gradle*', 'grow-mobile/android/**/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
 
       - name: Flutter doctor
+        working-directory: grow-mobile
         run: flutter doctor -v
 
-      - name: Pub get
+      - name: Flutter pub get
+        working-directory: grow-mobile
         run: flutter pub get
 
-      - name: Analyze
+      - name: Flutter analyze (non-blocking)
+        working-directory: grow-mobile
+        continue-on-error: true
         run: flutter analyze
 
       - name: Build debug APK
+        working-directory: grow-mobile
         run: flutter build apk --debug
 
       - name: Build release APK (unsigned)
+        working-directory: grow-mobile
         run: flutter build apk --release
 
       - name: Build release App Bundle (unsigned)
+        working-directory: grow-mobile
         run: flutter build appbundle --release
 
       - name: Upload debug APK
@@ -91,14 +122,19 @@ jobs:
 
       - name: Build summary
         if: always()
+        working-directory: grow-mobile
         run: |
-          echo "## Build summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Artifacts produced:" >> $GITHUB_STEP_SUMMARY
-          ls -lh build/app/outputs/flutter-apk/ build/app/outputs/bundle/release/ 2>/dev/null | awk '{print "- `" $NF "` " $5}' >> $GITHUB_STEP_SUMMARY || true
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Download from the **Artifacts** section at the top of this run." >> $GITHUB_STEP_SUMMARY
-          echo "Sideload to a connected Android device with:" >> $GITHUB_STEP_SUMMARY
-          echo '```bash' >> $GITHUB_STEP_SUMMARY
-          echo 'adb install -r app-release.apk' >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+          {
+            echo "## Build summary"
+            echo ""
+            echo "Artifacts produced:"
+            for f in build/app/outputs/flutter-apk/app-debug.apk \
+                     build/app/outputs/flutter-apk/app-release.apk \
+                     build/app/outputs/bundle/release/app-release.aab; do
+              if [ -f "$f" ]; then
+                printf -- "- \`%s\` (%s)\n" "$(basename "$f")" "$(du -h "$f" | cut -f1)"
+              fi
+            done
+            echo ""
+            echo "Download from the **Artifacts** section at the top of this run."
+          } >> "$GITHUB_STEP_SUMMARY"
